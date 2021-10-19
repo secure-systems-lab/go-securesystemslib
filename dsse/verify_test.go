@@ -9,6 +9,7 @@ import (
 
 type mockVerifier struct {
 	returnErr error
+	keyID     string
 }
 
 func (m *mockVerifier) Verify(keyID string, data, sig []byte) error {
@@ -16,6 +17,10 @@ func (m *mockVerifier) Verify(keyID string, data, sig []byte) error {
 		return m.returnErr
 	}
 	return nil
+}
+
+func (m *mockVerifier) KeyID() (string, error) {
+	return m.keyID, nil
 }
 
 // Test against the example in the protocol specification:

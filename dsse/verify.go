@@ -12,6 +12,7 @@ If the key is not recognized ErrUnknownKey shall be returned.
 */
 type Verifier interface {
 	Verify(keyID string, data, sig []byte) error
+	KeyID() (string, error)
 }
 
 type EnvelopeVerifier struct {
@@ -40,10 +41,16 @@ func (ev *EnvelopeVerifier) Verify(e *Envelope) error {
 			return err
 		}
 
-		// Loop over the providers. If a provider recognizes the key, we exit
-		// the loop and use the result.
+		// Loop over the providers.
+		// If provider and signiture include keyID but do not match skip.
+		// If a provider recognizes the key, we exit the loop and use the result.
 		for _, v := range ev.providers {
-			err := v.Verify(s.KeyID, paeEnc, sig)
+			keyID, err := v.KeyID()
+			if s.KeyID != "" && keyID != "" && err == nil && s.KeyID != keyID {
+				continue
+			}
+
+			err = v.Verify(s.KeyID, paeEnc, sig)
 			if err != nil {
 				if err == ErrUnknownKey {
 					continue

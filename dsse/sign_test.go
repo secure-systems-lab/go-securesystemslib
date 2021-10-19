@@ -55,6 +55,10 @@ func (n nilsigner) Verify(keyID string, data, sig []byte) error {
 	return ErrUnknownKey
 }
 
+func (m nilsigner) KeyID() (string, error) {
+	return "", errors.New("KeyID not supported")
+}
+
 type nullsigner int
 
 func (n nullsigner) Sign(data []byte) ([]byte, string, error) {
@@ -79,6 +83,10 @@ func (n nullsigner) Verify(keyID string, data, sig []byte) error {
 	return nil
 }
 
+func (m nullsigner) KeyID() (string, error) {
+	return "", errors.New("KeyID not supported")
+}
+
 type errsigner int
 
 func (n errsigner) Sign(data []byte) ([]byte, string, error) {
@@ -87,6 +95,10 @@ func (n errsigner) Sign(data []byte) ([]byte, string, error) {
 
 func (n errsigner) Verify(keyID string, data, sig []byte) error {
 	return errVerify
+}
+
+func (n errsigner) KeyID() (string, error) {
+	return "", errors.New("KeyID not supported")
 }
 
 type errverifier int
@@ -99,6 +111,10 @@ func (n errverifier) Sign(data []byte) ([]byte, string, error) {
 
 func (n errverifier) Verify(keyID string, data, sig []byte) error {
 	return errVerify
+}
+
+func (n errverifier) KeyID() (string, error) {
+	return "", errors.New("KeyID not supported")
 }
 
 type badverifier int
@@ -123,6 +139,10 @@ func (n badverifier) Verify(keyID string, data, sig []byte) error {
 	}
 
 	return nil
+}
+
+func (n badverifier) KeyID() (string, error) {
+	return "", errors.New("KeyID not supported")
 }
 
 func TestNoSigners(t *testing.T) {
@@ -248,6 +268,10 @@ func (es *EcdsaSigner) Verify(keyID string, data, sig []byte) error {
 		return nil
 	}
 	return errVerify
+}
+
+func (m *EcdsaSigner) KeyID() (string, error) {
+	return m.keyID, nil
 }
 
 // Test against the example in the protocol specification:
@@ -449,6 +473,10 @@ func (i *interceptSigner) Verify(keyID string, data, sig []byte) error {
 		return nil
 	}
 	return errVerify
+}
+
+func (i *interceptSigner) KeyID() (string, error) {
+	return i.keyID, nil
 }
 
 func TestVerifyOneFail(t *testing.T) {
