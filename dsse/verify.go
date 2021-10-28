@@ -29,7 +29,7 @@ func (ev *EnvelopeVerifier) Verify(e *Envelope) error {
 		return err
 	}
 	// Generate PAE(payloadtype, serialized body)
-	paeEnc := PAE(e.PayloadType, string(body))
+	paeEnc := PAE(e.PayloadType, body)
 
 	// If *any* signature is found to be incorrect, the entire verification
 	// step fails even if *some* signatures are correct.

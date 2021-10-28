@@ -20,13 +20,19 @@ func TestPAE(t *testing.T) {
 	t.Run("Empty", func(t *testing.T) {
 		var want = []byte("DSSEv1 0  0 ")
 
-		got := PAE("", "")
+		got := PAE("", []byte{})
 		assert.Equal(t, want, got, "Wrong encoding")
 	})
 	t.Run("Hello world", func(t *testing.T) {
 		var want = []byte("DSSEv1 29 http://example.com/HelloWorld 11 hello world")
 
-		got := PAE("http://example.com/HelloWorld", "hello world")
+		got := PAE("http://example.com/HelloWorld", []byte("hello world"))
+		assert.Equal(t, want, got, "Wrong encoding")
+	})
+	t.Run("Unicode-only", func(t *testing.T) {
+		var want = []byte("DSSEv1 29 http://example.com/HelloWorld 3 ಠ")
+
+		got := PAE("http://example.com/HelloWorld", []byte("ಠ"))
 		assert.Equal(t, want, got, "Wrong encoding")
 	})
 }
@@ -144,7 +150,7 @@ func TestNoSigners(t *testing.T) {
 func TestNilSign(t *testing.T) {
 	var keyID = "nil"
 	var payloadType = "http://example.com/HelloWorld"
-	var payload = "hello world"
+	var payload = []byte("hello world")
 
 	pae := PAE(payloadType, payload)
 	want := Envelope{
