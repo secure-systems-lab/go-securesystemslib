@@ -166,7 +166,7 @@ Any domain specific validation such as parsing the decoded body and
 validating the payload type is left out to the caller.
 Verify returns a list of accepted keys each including a keyid, public and signiture of the accepted provider keys.
 */
-func (es *envelopeSigner) Verify(e *Envelope) ([]AccesptedKey, error) {
+func (es *envelopeSigner) Verify(e *Envelope) ([]AcceptedKeys, error) {
 	return es.ev.Verify(e)
 }
 

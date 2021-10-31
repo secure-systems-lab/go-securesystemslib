@@ -23,13 +23,13 @@ type envelopeVerifier struct {
 	threshold int
 }
 
-type AccesptedKey struct {
+type AcceptedKeys struct {
 	Public crypto.PublicKey
 	KeyID  string
 	Sig    Signature
 }
 
-func (ev *envelopeVerifier) Verify(e *Envelope) ([]AccesptedKey, error) {
+func (ev *envelopeVerifier) Verify(e *Envelope) ([]AcceptedKeys, error) {
 	if len(e.Signatures) == 0 {
 		return nil, ErrNoSignature
 	}
@@ -43,7 +43,7 @@ func (ev *envelopeVerifier) Verify(e *Envelope) ([]AccesptedKey, error) {
 	paeEnc := PAE(e.PayloadType, string(body))
 
 	// If *any* signature is found to be incorrect, it is skipped
-	var accepted_keys []AccesptedKey
+	var accepted_keys []AcceptedKeys
 	for _, s := range e.Signatures {
 		sig, err := b64Decode(s.Sig)
 		if err != nil {
@@ -68,7 +68,7 @@ func (ev *envelopeVerifier) Verify(e *Envelope) ([]AccesptedKey, error) {
 				continue
 			}
 
-			acceptedKey := AccesptedKey{
+			acceptedKey := AcceptedKeys{
 				Public: v.Public(),
 				KeyID:  keyID,
 				Sig:    s,
