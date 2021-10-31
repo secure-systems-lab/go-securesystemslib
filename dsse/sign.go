@@ -95,7 +95,8 @@ func NewEnvelopeSigner(p ...SignVerifier) (*envelopeSigner, error) {
 /*
 NewMultiEnvelopeSigner creates an EnvelopeSigner that uses 1+ Signer
 algorithms to sign the data.
-Creates a verifier with threshold at least threshold amount of the providers must validate signitures successfully.
+Creates a verifier with threshold.
+threashold indicates the amount of providers that must validate the envelope.
 */
 func NewMultiEnvelopeSigner(threshold int, p ...SignVerifier) (*envelopeSigner, error) {
 	var providers []SignVerifier
