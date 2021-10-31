@@ -1,6 +1,7 @@
 package dsse
 
 import (
+	"crypto"
 	"errors"
 	"testing"
 
@@ -11,11 +12,19 @@ type mockVerifier struct {
 	returnErr error
 }
 
-func (m *mockVerifier) Verify(keyID string, data, sig []byte) error {
+func (m *mockVerifier) Verify(data, sig []byte) error {
 	if m.returnErr != nil {
 		return m.returnErr
 	}
 	return nil
+}
+
+func (m *mockVerifier) KeyID() (string, error) {
+	return "mock", errors.New("Unsupported keyid")
+}
+
+func (m *mockVerifier) Public() crypto.PublicKey {
+	return "mock-public"
 }
 
 // Test against the example in the protocol specification:
@@ -35,16 +44,21 @@ func TestVerify(t *testing.T) {
 		},
 	}
 
-	ev := NewEnvelopeVerifier(&mockVerifier{})
-	err := ev.Verify(&e)
+	ev, err := NewEnvelopeVerifier(&mockVerifier{})
+	assert.Nil(t, err, "unexpected error")
+	acceptedKeys, err := ev.Verify(&e)
 
 	// Now verify
 	assert.Nil(t, err, "unexpected error")
+	assert.Len(t, acceptedKeys, 1, "unexpected keys")
+	assert.Equal(t, acceptedKeys[0].KeyID, "", "unexpected keyid")
 
 	// Now try an error
-	ev = NewEnvelopeVerifier(&mockVerifier{returnErr: errors.New("uh oh")})
-	err = ev.Verify(&e)
+	ev, err = NewEnvelopeVerifier(&mockVerifier{returnErr: errors.New("uh oh")})
+	assert.Nil(t, err, "unexpected error")
+	_, err = ev.Verify(&e)
 
 	// Now verify
 	assert.Error(t, err)
+
 }
