@@ -43,7 +43,8 @@ func (ev *envelopeVerifier) Verify(e *Envelope) ([]AcceptedKeys, error) {
 	paeEnc := PAE(e.PayloadType, string(body))
 
 	// If *any* signature is found to be incorrect, it is skipped
-	var accepted_keys []AcceptedKeys
+	var acceptedKeys []AcceptedKeys
+	usedKeyids := make(map[string]string)
 	for _, s := range e.Signatures {
 		sig, err := b64Decode(s.Sig)
 		if err != nil {
@@ -74,15 +75,27 @@ func (ev *envelopeVerifier) Verify(e *Envelope) ([]AcceptedKeys, error) {
 				Sig:    s,
 			}
 
-			accepted_keys = append(accepted_keys, acceptedKey)
+			// See https://github.com/in-toto/in-toto/pull/251
+			if val, ok := usedKeyids[keyID]; ok {
+				fmt.Printf("Found envelope signed by different subkeys of the same main key, Only one of them is counted towards the step threshold, KeyID=%s\n", val)
+			}
+
+			usedKeyids[keyID] = ""
+			acceptedKeys = append(acceptedKeys, acceptedKey)
 			break
 		}
 	}
-	if len(accepted_keys) < ev.threshold {
-		return accepted_keys, errors.New(fmt.Sprintf("Accepted signitures do not match threshold, Found: %d, Expected %d", len(accepted_keys), ev.threshold))
+
+	// Sanity if with some reflect magic this happens.
+	if ev.threshold <= 0 || ev.threshold > len(ev.providers) {
+		return nil, errors.New("Invalid threshold")
 	}
 
-	return accepted_keys, nil
+	if len(usedKeyids) < ev.threshold {
+		return acceptedKeys, errors.New(fmt.Sprintf("Accepted signitures do not match threshold, Found: %d, Expected %d", len(acceptedKeys), ev.threshold))
+	}
+
+	return acceptedKeys, nil
 }
 
 func NewEnvelopeVerifier(v ...Verifier) (*envelopeVerifier, error) {
