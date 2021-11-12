@@ -52,7 +52,7 @@ func (ev *envelopeVerifier) Verify(e *Envelope) ([]AcceptedKeys, error) {
 		}
 
 		// Loop over the providers.
-		// If provider and signiture include keyID's but do not match skip.
+		// If provider and signature include key IDs but do not match skip.
 		// If a provider recognizes the key, we exit
 		// the loop and use the result.
 		for _, v := range ev.providers {
