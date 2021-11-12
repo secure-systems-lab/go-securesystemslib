@@ -10,7 +10,7 @@ import (
 Verifier verifies a complete message against a signature and key.
 If the message was hashed prior to signature generation, the verifier
 must perform the same steps.
-If Keyd returns successfully only signiture matching keyid will be verfied.
+If KeyID returns successfully, only signature matching the key ID will be verified.
 */
 type Verifier interface {
 	Verify(data, sig []byte) error
