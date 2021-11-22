@@ -286,7 +286,7 @@ func (es *EcdsaSigner) KeyID() (string, error) {
 }
 
 func (es *EcdsaSigner) Public() crypto.PublicKey {
-	return es.Public
+	return es.key.Public()
 }
 
 // Test against the example in the protocol specification:
@@ -563,4 +563,87 @@ func TestVerifyOneFail(t *testing.T) {
 	assert.True(t, s2.verifyCalled, "verify not called")
 	assert.Len(t, acceptedKeys, 1, "unexpected keys")
 	assert.Equal(t, acceptedKeys[0].KeyID, "i1", "unexpected keyid")
+}
+
+func TestVerifySameKeyID(t *testing.T) {
+	var payloadType = "http://example.com/HelloWorld"
+	var payload = "hello world"
+
+	var s1 = &interceptSigner{
+		keyID:     "i1",
+		verifyRes: true,
+	}
+	var s2 = &interceptSigner{
+		keyID:     "i1",
+		verifyRes: true,
+	}
+	signer, err := NewEnvelopeSigner(s1, s2)
+	assert.Nil(t, err, "unexpected error")
+
+	env, err := signer.SignPayload(payloadType, []byte(payload))
+	assert.Nil(t, err, "sign failed")
+
+	acceptedKeys, err := signer.Verify(env)
+	assert.Nil(t, err, "expected error")
+	assert.True(t, s1.verifyCalled, "verify not called")
+	assert.True(t, s2.verifyCalled, "verify not called")
+	assert.Len(t, acceptedKeys, 1, "unexpected keys")
+	assert.Equal(t, acceptedKeys[0].KeyID, "i1", "unexpected keyid")
+}
+
+func TestVerifyEmptyKeyID(t *testing.T) {
+	var payloadType = "http://example.com/HelloWorld"
+	var payload = "hello world"
+
+	var s1 = &interceptSigner{
+		keyID:     "",
+		verifyRes: true,
+	}
+
+	var s2 = &interceptSigner{
+		keyID:     "",
+		verifyRes: true,
+	}
+
+	signer, err := NewEnvelopeSigner(s1, s2)
+	assert.Nil(t, err, "unexpected error")
+
+	env, err := signer.SignPayload(payloadType, []byte(payload))
+	assert.Nil(t, err, "sign failed")
+
+	acceptedKeys, err := signer.Verify(env)
+	assert.Nil(t, err, "expected error")
+	// assert.True(t, s1.verifyCalled, "verify not called")
+	// assert.True(t, s2.verifyCalled, "verify not called")
+	assert.Len(t, acceptedKeys, 1, "unexpected keys")
+	assert.Equal(t, acceptedKeys[0].KeyID, "", "unexpected keyid")
+}
+
+func TestVerifyPublicKeyID(t *testing.T) {
+	var payloadType = "http://example.com/HelloWorld"
+	var payload = "hello world"
+	var keyID = "SHA256:f4AuBLdH4Lj/dIuwAUXXebzoI9B/cJ4iSQ3/qByIl4M"
+	// var keyID = "test key 123"
+
+	var s1 = &EcdsaSigner{
+		keyID: "",
+		key:   newEcdsaKey(),
+	}
+
+	var s2 = &EcdsaSigner{
+		keyID: "",
+		key:   newEcdsaKey(),
+	}
+	// a := s1.Public()
+
+	signer, err := NewEnvelopeSigner(s1, s2)
+	assert.Nil(t, err, "unexpected error")
+
+	env, err := signer.SignPayload(payloadType, []byte(payload))
+	assert.Nil(t, err, "sign failed")
+
+	acceptedKeys, err := signer.Verify(env)
+	assert.Nil(t, err, "expected error")
+	assert.Len(t, acceptedKeys, 1, "unexpected keys")
+	assert.Equal(t, acceptedKeys[0].KeyID, keyID, "unexpected keyid")
 }

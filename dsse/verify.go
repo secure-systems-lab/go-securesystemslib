@@ -4,6 +4,8 @@ import (
 	"crypto"
 	"errors"
 	"fmt"
+
+	"golang.org/x/crypto/ssh"
 )
 
 /*
@@ -23,13 +25,13 @@ type envelopeVerifier struct {
 	threshold int
 }
 
-type AcceptedKeys struct {
+type AcceptedKey struct {
 	Public crypto.PublicKey
 	KeyID  string
 	Sig    Signature
 }
 
-func (ev *envelopeVerifier) Verify(e *Envelope) ([]AcceptedKeys, error) {
+func (ev *envelopeVerifier) Verify(e *Envelope) ([]AcceptedKey, error) {
 	if len(e.Signatures) == 0 {
 		return nil, ErrNoSignature
 	}
@@ -43,7 +45,7 @@ func (ev *envelopeVerifier) Verify(e *Envelope) ([]AcceptedKeys, error) {
 	paeEnc := PAE(e.PayloadType, string(body))
 
 	// If *any* signature is found to be incorrect, it is skipped
-	var acceptedKeys []AcceptedKeys
+	var acceptedKeys []AcceptedKey
 	usedKeyids := make(map[string]string)
 	for _, s := range e.Signatures {
 		sig, err := b64Decode(s.Sig)
@@ -57,11 +59,17 @@ func (ev *envelopeVerifier) Verify(e *Envelope) ([]AcceptedKeys, error) {
 		// the loop and use the result.
 		for _, v := range ev.providers {
 			keyID, err := v.KeyID()
+
+			// Verifiers that do not provide a keyid will be generated one using public.
+			if err != nil || keyID == "" {
+				keyID, err = SHA256KeyID(v.Public())
+				if err != nil {
+					keyID = ""
+				}
+			}
+
 			if s.KeyID != "" && keyID != "" && err == nil && s.KeyID != keyID {
 				continue
-			}
-			if err != nil {
-				keyID = ""
 			}
 
 			err = v.Verify(paeEnc, sig)
@@ -69,15 +77,16 @@ func (ev *envelopeVerifier) Verify(e *Envelope) ([]AcceptedKeys, error) {
 				continue
 			}
 
-			acceptedKey := AcceptedKeys{
+			acceptedKey := AcceptedKey{
 				Public: v.Public(),
 				KeyID:  keyID,
 				Sig:    s,
 			}
 
 			// See https://github.com/in-toto/in-toto/pull/251
-			if val, ok := usedKeyids[keyID]; ok {
-				fmt.Printf("Found envelope signed by different subkeys of the same main key, Only one of them is counted towards the step threshold, KeyID=%s\n", val)
+			if _, ok := usedKeyids[keyID]; ok {
+				fmt.Printf("Found envelope signed by different subkeys of the same main key, Only one of them is counted towards the step threshold, KeyID=%s\n", keyID)
+				continue
 			}
 
 			usedKeyids[keyID] = ""
@@ -113,4 +122,14 @@ func NewMultiEnvelopeVerifier(threshold int, p ...Verifier) (*envelopeVerifier, 
 		threshold: threshold,
 	}
 	return &ev, nil
+}
+
+func SHA256KeyID(pub crypto.PublicKey) (string, error) {
+	// Generate public key fingerprint
+	sshpk, err := ssh.NewPublicKey(pub)
+	if err != nil {
+		return "", err
+	}
+	fingerprint := ssh.FingerprintSHA256(sshpk)
+	return fingerprint, nil
 }
