@@ -2,6 +2,7 @@ package cjson
 
 import (
 	"bytes"
+	"encoding/json"
 	"strings"
 	"testing"
 )
@@ -52,13 +53,14 @@ func TestEncodeCanonical(t *testing.T) {
 			KeyType:             "type",
 			Scheme:              "scheme",
 		},
+		json.RawMessage(`{"_type":"targets","spec_version":"1.0","version":0,"expires":"0001-01-01T00:00:00Z","targets":{},"custom":{"test":true}}`),
 	}
 	expectedResult := []string{
 		`{"keyid":"","keyid_hash_algorithms":null,"keytype":"","keyval":{"private":"","public":""},"scheme":""}`,
 		`{"keyid":"id","keyid_hash_algorithms":["hash"],"keytype":"type","keyval":{"private":"priv","public":"pub"},"scheme":"scheme"}`,
 		`{"false":false,"int":3,"int2":42,"nil":null,"string":"\\\"","true":true}`,
 		`{"keyid":"id","keyid_hash_algorithms":["hash"],"keytype":"type","keyval":{"certificate":"cert","private":"priv","public":"pub"},"scheme":"scheme"}`,
-		"",
+		`{"_type":"targets","custom":{"test":true},"expires":"0001-01-01T00:00:00Z","spec_version":"1.0","targets":{},"version":0}`,
 	}
 	for i := 0; i < len(objects); i++ {
 		result, err := EncodeCanonical(objects[i])
