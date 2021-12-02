@@ -108,7 +108,7 @@ func (n errsigner) Public() crypto.PublicKey {
 
 type errverifier int
 
-var errVerify = fmt.Errorf("Accepted signitures do not match threshold, Found: 0, Expected 1")
+var errVerify = fmt.Errorf("Accepted signatures do not match threshold, Found: 0, Expected 1")
 var errThreshold = fmt.Errorf("Invalid threshold")
 
 func (n errverifier) Sign(data []byte) ([]byte, error) {

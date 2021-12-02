@@ -47,6 +47,7 @@ func (ev *envelopeVerifier) Verify(e *Envelope) ([]AcceptedKey, error) {
 	// If *any* signature is found to be incorrect, it is skipped
 	var acceptedKeys []AcceptedKey
 	usedKeyids := make(map[string]string)
+	unverified_providers := ev.providers
 	for _, s := range e.Signatures {
 		sig, err := b64Decode(s.Sig)
 		if err != nil {
@@ -57,7 +58,8 @@ func (ev *envelopeVerifier) Verify(e *Envelope) ([]AcceptedKey, error) {
 		// If provider and signature include key IDs but do not match skip.
 		// If a provider recognizes the key, we exit
 		// the loop and use the result.
-		for _, v := range ev.providers {
+		providers := unverified_providers
+		for i, v := range providers {
 			keyID, err := v.KeyID()
 
 			// Verifiers that do not provide a keyid will be generated one using public.
@@ -82,6 +84,7 @@ func (ev *envelopeVerifier) Verify(e *Envelope) ([]AcceptedKey, error) {
 				KeyID:  keyID,
 				Sig:    s,
 			}
+			unverified_providers = RemoveIndex(providers, i)
 
 			// See https://github.com/in-toto/in-toto/pull/251
 			if _, ok := usedKeyids[keyID]; ok {
@@ -132,4 +135,8 @@ func SHA256KeyID(pub crypto.PublicKey) (string, error) {
 	}
 	fingerprint := ssh.FingerprintSHA256(sshpk)
 	return fingerprint, nil
+}
+
+func RemoveIndex(v []Verifier, index int) []Verifier {
+	return append(v[:index], v[index+1:]...)
 }
