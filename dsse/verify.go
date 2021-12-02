@@ -101,7 +101,7 @@ func (ev *envelopeVerifier) Verify(e *Envelope) ([]AcceptedKey, error) {
 	}
 
 	if len(usedKeyids) < ev.threshold {
-		return acceptedKeys, errors.New(fmt.Sprintf("Accepted signitures do not match threshold, Found: %d, Expected %d", len(acceptedKeys), ev.threshold))
+		return acceptedKeys, errors.New(fmt.Sprintf("Accepted signatures do not match threshold, Found: %d, Expected %d", len(acceptedKeys), ev.threshold))
 	}
 
 	return acceptedKeys, nil
