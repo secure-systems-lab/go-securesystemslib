@@ -137,6 +137,6 @@ func SHA256KeyID(pub crypto.PublicKey) (string, error) {
 	return fingerprint, nil
 }
 
-func RemoveIndex(v []Verifier, index int) []Verifier {
+func removeIndex(v []Verifier, index int) []Verifier {
 	return append(v[:index], v[index+1:]...)
 }
