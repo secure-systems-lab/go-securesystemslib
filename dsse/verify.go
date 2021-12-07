@@ -84,7 +84,7 @@ func (ev *envelopeVerifier) Verify(e *Envelope) ([]AcceptedKey, error) {
 				KeyID:  keyID,
 				Sig:    s,
 			}
-			unverified_providers = RemoveIndex(providers, i)
+			unverified_providers = removeIndex(providers, i)
 
 			// See https://github.com/in-toto/in-toto/pull/251
 			if _, ok := usedKeyids[keyID]; ok {
