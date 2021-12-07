@@ -78,7 +78,7 @@ type SignVerifier interface {
 }
 
 // EnvelopeSigner creates signed Envelopes.
-type envelopeSigner struct {
+type EnvelopeSigner struct {
 	providers []SignVerifier
 	ev        *envelopeVerifier
 }
@@ -88,7 +88,7 @@ NewEnvelopeSigner creates an EnvelopeSigner that uses 1+ Signer
 algorithms to sign the data.
 Creates a verifier with threshold=1, at least one of the providers must validate signitures successfully.
 */
-func NewEnvelopeSigner(p ...SignVerifier) (*envelopeSigner, error) {
+func NewEnvelopeSigner(p ...SignVerifier) (*EnvelopeSigner, error) {
 	return NewMultiEnvelopeSigner(1, p...)
 }
 
@@ -98,7 +98,7 @@ algorithms to sign the data.
 Creates a verifier with threshold.
 threashold indicates the amount of providers that must validate the envelope.
 */
-func NewMultiEnvelopeSigner(threshold int, p ...SignVerifier) (*envelopeSigner, error) {
+func NewMultiEnvelopeSigner(threshold int, p ...SignVerifier) (*EnvelopeSigner, error) {
 	var providers []SignVerifier
 
 	for _, sv := range p {
@@ -121,7 +121,7 @@ func NewMultiEnvelopeSigner(threshold int, p ...SignVerifier) (*envelopeSigner, 
 		return nil, err
 	}
 
-	return &envelopeSigner{
+	return &EnvelopeSigner{
 		providers: providers,
 		ev:        ev,
 	}, nil
@@ -133,7 +133,7 @@ Returned is an envelope as defined here:
 https://github.com/secure-systems-lab/dsse/blob/master/envelope.md
 One signature will be added for each Signer in the EnvelopeSigner.
 */
-func (es *envelopeSigner) SignPayload(payloadType string, body []byte) (*Envelope, error) {
+func (es *EnvelopeSigner) SignPayload(payloadType string, body []byte) (*Envelope, error) {
 	var e = Envelope{
 		Payload:     base64.StdEncoding.EncodeToString(body),
 		PayloadType: payloadType,
@@ -166,7 +166,7 @@ Any domain specific validation such as parsing the decoded body and
 validating the payload type is left out to the caller.
 Verify returns a list of accepted keys each including a keyid, public and signiture of the accepted provider keys.
 */
-func (es *envelopeSigner) Verify(e *Envelope) ([]AcceptedKey, error) {
+func (es *EnvelopeSigner) Verify(e *Envelope) ([]AcceptedKey, error) {
 	return es.ev.Verify(e)
 }
 
