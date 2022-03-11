@@ -32,6 +32,10 @@ type AcceptedKey struct {
 }
 
 func (ev *EnvelopeVerifier) Verify(e *Envelope) ([]AcceptedKey, error) {
+	if e == nil {
+		return nil, errors.New("cannot verify a nil envelope")
+	}
+
 	if len(e.Signatures) == 0 {
 		return nil, ErrNoSignature
 	}

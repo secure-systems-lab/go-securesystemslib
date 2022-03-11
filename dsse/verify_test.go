@@ -8,6 +8,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestEnvelopeVerifier_Verify_HandlesNil(t *testing.T) {
+	verifier, err := NewEnvelopeVerifier(&mockVerifier{})
+	assert.NoError(t, err)
+
+	acceptedKeys, err := verifier.Verify(nil)
+	assert.Empty(t, acceptedKeys)
+	assert.EqualError(t, err, "cannot verify a nil envelope")
+}
+
 type mockVerifier struct {
 	returnErr error
 }
