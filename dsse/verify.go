@@ -41,7 +41,7 @@ func (ev *EnvelopeVerifier) Verify(e *Envelope) ([]AcceptedKey, error) {
 	}
 
 	// Decode payload (i.e serialized body)
-	body, err := b64Decode(e.Payload)
+	body, err := e.DecodePayload()
 	if err != nil {
 		return nil, err
 	}

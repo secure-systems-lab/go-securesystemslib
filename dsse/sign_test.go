@@ -331,7 +331,7 @@ func TestEcdsaSign(t *testing.T) {
 	assert.Equal(t, acceptedKeys[0].KeyID, keyID, "unexpected keyid")
 }
 
-func TestB64Decode(t *testing.T) {
+func TestDecodePayload(t *testing.T) {
 	var want = make([]byte, 256)
 	for i := range want {
 		want[i] = byte(i)
@@ -342,23 +342,35 @@ func TestB64Decode(t *testing.T) {
 	var b64StdErr = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0-P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn-AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq-wsbKztLW2t7i5uru8vb6_wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t_g4eLj5OXm5-jp6uvs7e7v8PHy8_T19vf4-fr7_P3-_w"
 
 	t.Run("Standard encoding", func(t *testing.T) {
-		got, err := b64Decode(b64Std)
+		env := &Envelope{
+			Payload: b64Std,
+		}
+		got, err := env.DecodePayload()
 		assert.Nil(t, err, "unexpected error")
 		assert.Equal(t, want, got, "wrong data")
 	})
 	t.Run("URL encoding", func(t *testing.T) {
-		got, err := b64Decode(b64Url)
+		env := &Envelope{
+			Payload: b64Url,
+		}
+		got, err := env.DecodePayload()
 		assert.Nil(t, err, "unexpected error")
 		assert.Equal(t, want, got, "wrong data")
 	})
 
 	t.Run("Standard encoding - error", func(t *testing.T) {
-		got, err := b64Decode(b64StdErr)
+		env := &Envelope{
+			Payload: b64StdErr,
+		}
+		got, err := env.DecodePayload()
 		assert.NotNil(t, err, "expected error")
 		assert.Nil(t, got, "wrong data")
 	})
 	t.Run("URL encoding - error", func(t *testing.T) {
-		got, err := b64Decode(b64UrlErr)
+		env := &Envelope{
+			Payload: b64UrlErr,
+		}
+		got, err := env.DecodePayload()
 		assert.NotNil(t, err, "expected error")
 		assert.Nil(t, got, "wrong data")
 	})
