@@ -32,12 +32,12 @@ type Envelope struct {
 }
 
 /*
-DecodePayload returns the serialized body, decoded
+DecodeB64Payload returns the serialized body, decoded
 from the envelope's payload field. A flexible
 decoder is used, first trying standard base64, then
 URL-encoded base64.
 */
-func (e *Envelope) DecodePayload() ([]byte, error) {
+func (e *Envelope) DecodeB64Payload() ([]byte, error) {
 	return b64Decode(e.Payload)
 }
 
