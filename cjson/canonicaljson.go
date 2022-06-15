@@ -6,13 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"regexp"
 	"sort"
 	"strings"
-)
-
-var (
-	stringEscapeRE = regexp.MustCompile(`([\"\\])`)
 )
 
 /*
@@ -23,7 +18,12 @@ escaping backslashes ("\") and double quotes (") and wrapping the resulting
 string in double quotes (").
 */
 func encodeCanonicalString(s string) string {
-	return fmt.Sprintf("\"%s\"", stringEscapeRE.ReplaceAllString(s, "\\$1"))
+	// Escape backslashes
+	s = strings.ReplaceAll(s, "\\", "\\\\")
+	// Escape double quotes
+	s = strings.ReplaceAll(s, "\"", "\\\"")
+	// Wrap with double quotes
+	return fmt.Sprintf("\"%s\"", s)
 }
 
 /*
