@@ -104,11 +104,11 @@ func (ev *EnvelopeVerifier) Verify(e *Envelope) ([]AcceptedKey, error) {
 
 	// Sanity if with some reflect magic this happens.
 	if ev.threshold <= 0 || ev.threshold > len(ev.providers) {
-		return nil, errors.New("Invalid threshold")
+		return nil, errors.New("invalid threshold")
 	}
 
 	if len(usedKeyids) < ev.threshold {
-		return acceptedKeys, errors.New(fmt.Sprintf("Accepted signatures do not match threshold, Found: %d, Expected %d", len(acceptedKeys), ev.threshold))
+		return acceptedKeys, fmt.Errorf("accepted signatures do not match threshold, Found: %d, Expected %d", len(acceptedKeys), ev.threshold)
 	}
 
 	return acceptedKeys, nil
@@ -121,7 +121,7 @@ func NewEnvelopeVerifier(v ...Verifier) (*EnvelopeVerifier, error) {
 func NewMultiEnvelopeVerifier(threshold int, p ...Verifier) (*EnvelopeVerifier, error) {
 
 	if threshold <= 0 || threshold > len(p) {
-		return nil, errors.New("Invalid threshold")
+		return nil, errors.New("invalid threshold")
 	}
 
 	ev := EnvelopeVerifier{
