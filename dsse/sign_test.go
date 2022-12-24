@@ -114,8 +114,8 @@ func (n errsigner) Public() crypto.PublicKey {
 
 type errverifier int
 
-var errVerify = fmt.Errorf("Accepted signatures do not match threshold, Found: 0, Expected 1")
-var errThreshold = fmt.Errorf("Invalid threshold")
+var errVerify = fmt.Errorf("accepted signatures do not match threshold, Found: 0, Expected 1")
+var errThreshold = fmt.Errorf("invalid threshold")
 
 func (n errverifier) Sign(data []byte) ([]byte, error) {
 	return data, nil
@@ -417,6 +417,7 @@ func TestVerifyMultipleProviderThreshold(t *testing.T) {
 	var ns nilsigner
 	var null nullsigner
 	signer, err := NewMultiEnvelopeSigner(2, ns, null)
+	assert.Nil(t, err)
 	env, err := signer.SignPayload(payloadType, []byte(payload))
 	assert.Nil(t, err, "sign failed")
 
