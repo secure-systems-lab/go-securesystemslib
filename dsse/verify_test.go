@@ -1,6 +1,7 @@
 package dsse
 
 import (
+	"context"
 	"crypto"
 	"errors"
 	"testing"
@@ -12,7 +13,7 @@ func TestEnvelopeVerifier_Verify_HandlesNil(t *testing.T) {
 	verifier, err := NewEnvelopeVerifier(&mockVerifier{})
 	assert.NoError(t, err)
 
-	acceptedKeys, err := verifier.Verify(nil)
+	acceptedKeys, err := verifier.Verify(context.TODO(), nil)
 	assert.Empty(t, acceptedKeys)
 	assert.EqualError(t, err, "cannot verify a nil envelope")
 }
@@ -21,7 +22,7 @@ type mockVerifier struct {
 	returnErr error
 }
 
-func (m *mockVerifier) Verify(data, sig []byte) error {
+func (m *mockVerifier) Verify(ctx context.Context, data, sig []byte) error {
 	if m.returnErr != nil {
 		return m.returnErr
 	}
@@ -55,7 +56,7 @@ func TestVerify(t *testing.T) {
 
 	ev, err := NewEnvelopeVerifier(&mockVerifier{})
 	assert.Nil(t, err, "unexpected error")
-	acceptedKeys, err := ev.Verify(&e)
+	acceptedKeys, err := ev.Verify(context.TODO(), &e)
 
 	// Now verify
 	assert.Nil(t, err, "unexpected error")
@@ -65,7 +66,7 @@ func TestVerify(t *testing.T) {
 	// Now try an error
 	ev, err = NewEnvelopeVerifier(&mockVerifier{returnErr: errors.New("uh oh")})
 	assert.Nil(t, err, "unexpected error")
-	_, err = ev.Verify(&e)
+	_, err = ev.Verify(context.TODO(), &e)
 
 	// Now verify
 	assert.Error(t, err)
