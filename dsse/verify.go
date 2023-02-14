@@ -1,6 +1,7 @@
 package dsse
 
 import (
+	"context"
 	"crypto"
 	"errors"
 	"fmt"
@@ -15,7 +16,7 @@ must perform the same steps.
 If KeyID returns successfully, only signature matching the key ID will be verified.
 */
 type Verifier interface {
-	Verify(data, sig []byte) error
+	Verify(ctx context.Context, data, sig []byte) error
 	KeyID() (string, error)
 	Public() crypto.PublicKey
 }
@@ -31,7 +32,7 @@ type AcceptedKey struct {
 	Sig    Signature
 }
 
-func (ev *EnvelopeVerifier) Verify(e *Envelope) ([]AcceptedKey, error) {
+func (ev *EnvelopeVerifier) Verify(ctx context.Context, e *Envelope) ([]AcceptedKey, error) {
 	if e == nil {
 		return nil, errors.New("cannot verify a nil envelope")
 	}
@@ -78,7 +79,7 @@ func (ev *EnvelopeVerifier) Verify(e *Envelope) ([]AcceptedKey, error) {
 				continue
 			}
 
-			err = v.Verify(paeEnc, sig)
+			err = v.Verify(ctx, paeEnc, sig)
 			if err != nil {
 				continue
 			}
