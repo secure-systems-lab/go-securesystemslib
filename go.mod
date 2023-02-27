@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/codahale/rfc6979 v0.0.0-20141003034818-6a90f24967eb
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 	golang.org/x/crypto v0.6.0
 )
 
