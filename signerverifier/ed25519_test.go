@@ -7,16 +7,17 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/secure-systems-lab/go-securesystemslib/dsse"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewEd25519SignerVerifierFromSSLibKey(t *testing.T) {
-	key, err := LoadEd25519KeyFromFile(filepath.Join("test-data", "ed25519-test-key.pub"))
+func TestNewED25519SignerVerifierFromSSLibKey(t *testing.T) {
+	key, err := LoadED25519KeyFromFile(filepath.Join("test-data", "ed25519-test-key.pub"))
 	if err != nil {
 		t.Error(err)
 	}
 
-	sv, err := NewEd25519SignerVerifierFromSSLibKey(key)
+	sv, err := NewED25519SignerVerifierFromSSLibKey(key)
 	if err != nil {
 		t.Error(err)
 	}
@@ -29,13 +30,13 @@ func TestNewEd25519SignerVerifierFromSSLibKey(t *testing.T) {
 	assert.Nil(t, sv.private)
 }
 
-func TestEd25519SignerVerifierSign(t *testing.T) {
-	key, err := LoadEd25519KeyFromFile(filepath.Join("test-data", "ed25519-test-key"))
+func TestED25519SignerVerifierSign(t *testing.T) {
+	key, err := LoadED25519KeyFromFile(filepath.Join("test-data", "ed25519-test-key"))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	sv, err := NewEd25519SignerVerifierFromSSLibKey(key)
+	sv, err := NewED25519SignerVerifierFromSSLibKey(key)
 	if err != nil {
 		t.Error(err)
 	}
@@ -50,12 +51,12 @@ func TestEd25519SignerVerifierSign(t *testing.T) {
 	expectedSignature := []byte{0x80, 0x72, 0xb4, 0x31, 0xc5, 0xa3, 0x7e, 0xc, 0xf3, 0x91, 0x22, 0x3, 0x60, 0xbf, 0x92, 0xa4, 0x46, 0x31, 0x84, 0x83, 0xf1, 0x31, 0x3, 0xdc, 0xbc, 0x5, 0x6f, 0xab, 0x84, 0xe4, 0xdc, 0xe9, 0xf5, 0x1c, 0xa9, 0xb3, 0x95, 0xa5, 0xa0, 0x16, 0xd3, 0xaa, 0x4d, 0xe7, 0xde, 0xaf, 0xc2, 0x5e, 0x1e, 0x9a, 0x9d, 0xc8, 0xb2, 0x5c, 0x1c, 0x68, 0xf7, 0x28, 0xb4, 0x1, 0x4d, 0x9f, 0xc8, 0x4}
 	assert.Equal(t, expectedSignature, signature)
 
-	key, err = LoadEd25519KeyFromFile(filepath.Join("test-data", "ed25519-test-key.pub"))
+	key, err = LoadED25519KeyFromFile(filepath.Join("test-data", "ed25519-test-key.pub"))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	sv, err = NewEd25519SignerVerifierFromSSLibKey(key)
+	sv, err = NewED25519SignerVerifierFromSSLibKey(key)
 	if err != nil {
 		t.Error(err)
 	}
@@ -64,13 +65,13 @@ func TestEd25519SignerVerifierSign(t *testing.T) {
 	assert.ErrorIs(t, err, ErrNotPrivateKey)
 }
 
-func TestEd25519SignerVerifierVerify(t *testing.T) {
-	key, err := LoadEd25519KeyFromFile(filepath.Join("test-data", "ed25519-test-key.pub"))
+func TestED25519SignerVerifierVerify(t *testing.T) {
+	key, err := LoadED25519KeyFromFile(filepath.Join("test-data", "ed25519-test-key.pub"))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	sv, err := NewEd25519SignerVerifierFromSSLibKey(key)
+	sv, err := NewED25519SignerVerifierFromSSLibKey(key)
 	if err != nil {
 		t.Error(err)
 	}
@@ -91,4 +92,53 @@ func hexDecode(t *testing.T, data string) []byte {
 		t.Fatal(err)
 	}
 	return b
+}
+
+func TestED25519SignerVerifierWithDSSEEnvelope(t *testing.T) {
+	key, err := LoadED25519KeyFromFile(filepath.Join("test-data", "ed25519-test-key"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sv, err := NewED25519SignerVerifierFromSSLibKey(key)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	payloadType := "application/vnd.dsse+json"
+	payload := []byte("test message")
+
+	es, err := dsse.NewEnvelopeSigner(sv)
+	if err != nil {
+		t.Error(err)
+	}
+
+	env, err := es.SignPayload(context.Background(), payloadType, payload)
+	if err != nil {
+		t.Error(err)
+	}
+
+	assert.Equal(t, "52e3b8e73279d6ebdd62a5016e2725ff284f569665eb92ccb145d83817a02997", env.Signatures[0].KeyID)
+	envPayload, err := env.DecodeB64Payload()
+	assert.Equal(t, payload, envPayload)
+	assert.Nil(t, err)
+
+	key, err = LoadED25519KeyFromFile(filepath.Join("test-data", "ed25519-test-key.pub"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sv, err = NewED25519SignerVerifierFromSSLibKey(key)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ev, err := dsse.NewEnvelopeVerifier(sv)
+	if err != nil {
+		t.Error(err)
+	}
+
+	acceptedKeys, err := ev.Verify(context.Background(), env)
+	assert.Nil(t, err)
+	assert.Equal(t, "52e3b8e73279d6ebdd62a5016e2725ff284f569665eb92ccb145d83817a02997", acceptedKeys[0].KeyID)
 }

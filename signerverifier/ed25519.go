@@ -8,17 +8,17 @@ import (
 	"os"
 )
 
-const Ed25519KeyType = "ed25519"
+const ED25519KeyType = "ed25519"
 
-type Ed25519SignerVerifier struct {
+type ED25519SignerVerifier struct {
 	keyID   string
 	private ed25519.PrivateKey
 	public  ed25519.PublicKey
 }
 
-// NewEd25519SignerVerifierFromSSLibKey creates an Ed25519SignerVerifier from an
+// NewED25519SignerVerifierFromSSLibKey creates an Ed25519SignerVerifier from an
 // SSLibKey.
-func NewEd25519SignerVerifierFromSSLibKey(key *SSLibKey) (*Ed25519SignerVerifier, error) {
+func NewED25519SignerVerifierFromSSLibKey(key *SSLibKey) (*ED25519SignerVerifier, error) {
 	public, err := hex.DecodeString(key.KeyVal.Public)
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func NewEd25519SignerVerifierFromSSLibKey(key *SSLibKey) (*Ed25519SignerVerifier
 		}
 	}
 
-	return &Ed25519SignerVerifier{
+	return &ED25519SignerVerifier{
 		keyID:   key.KeyID(),
 		public:  ed25519.PublicKey(public),
 		private: ed25519.PrivateKey(private),
@@ -50,7 +50,7 @@ func NewEd25519SignerVerifierFromSSLibKey(key *SSLibKey) (*Ed25519SignerVerifier
 }
 
 // Sign creates a signature for `data`.
-func (sv *Ed25519SignerVerifier) Sign(ctx context.Context, data []byte) ([]byte, error) {
+func (sv *ED25519SignerVerifier) Sign(ctx context.Context, data []byte) ([]byte, error) {
 	if len(sv.private) == 0 {
 		return nil, ErrNotPrivateKey
 	}
@@ -60,7 +60,7 @@ func (sv *Ed25519SignerVerifier) Sign(ctx context.Context, data []byte) ([]byte,
 }
 
 // Verify verifies the `sig` value passed in against `data`.
-func (sv Ed25519SignerVerifier) Verify(ctx context.Context, data []byte, sig []byte) error {
+func (sv *ED25519SignerVerifier) Verify(ctx context.Context, data []byte, sig []byte) error {
 	if ok := ed25519.Verify(sv.public, data, sig); ok {
 		return nil
 	}
@@ -68,18 +68,18 @@ func (sv Ed25519SignerVerifier) Verify(ctx context.Context, data []byte, sig []b
 }
 
 // KeyID returns the identifier of the key used to create the
-// Ed25519SignerVerifier instance.
-func (sv Ed25519SignerVerifier) KeyID() (string, error) {
+// ED25519SignerVerifier instance.
+func (sv *ED25519SignerVerifier) KeyID() (string, error) {
 	return sv.keyID, nil
 }
 
 // Public returns the public portion of the key used to create the
-// Ed25519SignerVerifier instance.
-func (sv Ed25519SignerVerifier) Public() crypto.PublicKey {
+// ED25519SignerVerifier instance.
+func (sv *ED25519SignerVerifier) Public() crypto.PublicKey {
 	return sv.public
 }
 
-func LoadEd25519KeyFromFile(path string) (*SSLibKey, error) {
+func LoadED25519KeyFromFile(path string) (*SSLibKey, error) {
 	contents, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
