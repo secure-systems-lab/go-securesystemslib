@@ -20,7 +20,6 @@ var ErrFailedPEMParsing = errors.New("failed parsing the PEM block: unsupported 
 const (
 	RSAKeyType       = "rsa"
 	RSAKeyScheme     = "rsassa-pss-sha256"
-	RSAPublicKeyPEM  = "PUBLIC KEY"
 	RSAPrivateKeyPEM = "RSA PRIVATE KEY"
 )
 
@@ -61,13 +60,13 @@ func (sv *RSAPSSSignerVerifier) Sign(ctx context.Context, data []byte) ([]byte, 
 		return nil, ErrNotPrivateKey
 	}
 
-	hashedData := hashBeforeSigning(data)
+	hashedData := hashBeforeSigning(data, sha256.New())
 
 	return rsa.SignPSS(rand.Reader, sv.private, crypto.SHA256, hashedData, &rsa.PSSOptions{SaltLength: sha256.Size, Hash: crypto.SHA256})
 }
 
 func (sv RSAPSSSignerVerifier) Verify(ctx context.Context, data []byte, sig []byte) error {
-	hashedData := hashBeforeSigning(data)
+	hashedData := hashBeforeSigning(data, sha256.New())
 
 	if err := rsa.VerifyPSS(sv.public, crypto.SHA256, hashedData, sig, &rsa.PSSOptions{SaltLength: sha256.Size, Hash: crypto.SHA256}); err != nil {
 		return ErrSignatureVerificationFailed
@@ -108,14 +107,14 @@ func LoadRSAPSSKeyFromFile(path string) (*SSLibKey, error) {
 		if err != nil {
 			return nil, err
 		}
-		key.KeyVal.Public = string(generatePEMBlock(pubKeyBytes, RSAPublicKeyPEM))
+		key.KeyVal.Public = string(generatePEMBlock(pubKeyBytes, PublicKeyPEM))
 
 	case *rsa.PrivateKey:
 		pubKeyBytes, err := x509.MarshalPKIXPublicKey(k.Public())
 		if err != nil {
 			return nil, err
 		}
-		key.KeyVal.Public = string(generatePEMBlock(pubKeyBytes, RSAPublicKeyPEM))
+		key.KeyVal.Public = string(generatePEMBlock(pubKeyBytes, PublicKeyPEM))
 		key.KeyVal.Private = string(generatePEMBlock(pemData.Bytes, RSAPrivateKeyPEM))
 	}
 

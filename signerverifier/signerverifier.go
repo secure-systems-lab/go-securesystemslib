@@ -13,6 +13,11 @@ var (
 	ErrInvalidThreshold            = errors.New("threshold is either less than 1 or greater than number of provided public keys")
 )
 
+const (
+	PublicKeyPEM  = "PUBLIC KEY"
+	PrivateKeyPEM = "PRIVATE KEY"
+)
+
 type SSLibKey struct {
 	KeyIDHashAlgorithms []string `json:"keyid_hash_algorithms"`
 	KeyType             string   `json:"keytype"`
