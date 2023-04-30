@@ -39,13 +39,13 @@ func TestPAE(t *testing.T) {
 	})
 }
 
-type nilsigner int
+type nilsignerverifier int
 
-func (n nilsigner) Sign(ctx context.Context, data []byte) ([]byte, error) {
+func (n nilsignerverifier) Sign(ctx context.Context, data []byte) ([]byte, error) {
 	return data, nil
 }
 
-func (n nilsigner) Verify(ctx context.Context, data, sig []byte) error {
+func (n nilsignerverifier) Verify(ctx context.Context, data, sig []byte) error {
 	if len(data) != len(sig) {
 		return errLength
 	}
@@ -59,21 +59,21 @@ func (n nilsigner) Verify(ctx context.Context, data, sig []byte) error {
 	return nil
 }
 
-func (n nilsigner) KeyID() (string, error) {
+func (n nilsignerverifier) KeyID() (string, error) {
 	return "nil", nil
 }
 
-func (n nilsigner) Public() crypto.PublicKey {
+func (n nilsignerverifier) Public() crypto.PublicKey {
 	return "nil-public"
 }
 
-type nullsigner int
+type nullsignerverifier int
 
-func (n nullsigner) Sign(ctx context.Context, data []byte) ([]byte, error) {
+func (n nullsignerverifier) Sign(ctx context.Context, data []byte) ([]byte, error) {
 	return data, nil
 }
 
-func (n nullsigner) Verify(ctx context.Context, data, sig []byte) error {
+func (n nullsignerverifier) Verify(ctx context.Context, data, sig []byte) error {
 	if len(data) != len(sig) {
 		return errLength
 	}
@@ -87,11 +87,11 @@ func (n nullsigner) Verify(ctx context.Context, data, sig []byte) error {
 	return nil
 }
 
-func (n nullsigner) KeyID() (string, error) {
+func (n nullsignerverifier) KeyID() (string, error) {
 	return "null", nil
 }
 
-func (n nullsigner) Public() crypto.PublicKey {
+func (n nullsignerverifier) Public() crypto.PublicKey {
 	return "null-public"
 }
 
@@ -113,24 +113,24 @@ func (n errsigner) Public() crypto.PublicKey {
 	return "err-public"
 }
 
-type errverifier int
+type errsignerverifier int
 
 var errVerify = fmt.Errorf("accepted signatures do not match threshold, Found: 0, Expected 1")
 var errThreshold = fmt.Errorf("invalid threshold")
 
-func (n errverifier) Sign(ctx context.Context, data []byte) ([]byte, error) {
+func (n errsignerverifier) Sign(ctx context.Context, data []byte) ([]byte, error) {
 	return data, nil
 }
 
-func (n errverifier) Verify(ctx context.Context, data, sig []byte) error {
+func (n errsignerverifier) Verify(ctx context.Context, data, sig []byte) error {
 	return errVerify
 }
 
-func (n errverifier) KeyID() (string, error) {
+func (n errsignerverifier) KeyID() (string, error) {
 	return "err", nil
 }
 
-func (n errverifier) Public() crypto.PublicKey {
+func (n errsignerverifier) Public() crypto.PublicKey {
 	return "err-public"
 }
 
@@ -172,7 +172,7 @@ func TestNoSigners(t *testing.T) {
 	})
 
 	t.Run("empty slice", func(t *testing.T) {
-		signer, err := NewEnvelopeSigner([]SignVerifier{}...)
+		signer, err := NewEnvelopeSigner([]SignerVerifier{}...)
 		assert.Nil(t, signer, "unexpected signer")
 		assert.NotNil(t, err, "error expected")
 		assert.Equal(t, ErrNoSigners, err, "wrong error")
@@ -196,7 +196,7 @@ func TestNilSign(t *testing.T) {
 		},
 	}
 
-	var ns nilsigner
+	var ns nilsignerverifier
 	signer, err := NewEnvelopeSigner(ns)
 	assert.Nil(t, err, "unexpected error")
 
@@ -246,14 +246,14 @@ func newEcdsaKey() *ecdsa.PrivateKey {
 	return &private
 }
 
-type EcdsaSigner struct {
+type EcdsaSignerVerifier struct {
 	keyID    string
 	key      *ecdsa.PrivateKey
 	rLen     int
 	verified bool
 }
 
-func (es *EcdsaSigner) Sign(ctx context.Context, data []byte) ([]byte, error) {
+func (es *EcdsaSignerVerifier) Sign(ctx context.Context, data []byte) ([]byte, error) {
 	// Data is complete message, hash it and sign the digest
 	digest := sha256.Sum256(data)
 	r, s, err := rfc6979.SignECDSA(es.key, digest[:], sha256.New)
@@ -269,7 +269,7 @@ func (es *EcdsaSigner) Sign(ctx context.Context, data []byte) ([]byte, error) {
 	return rawSig, nil
 }
 
-func (es *EcdsaSigner) Verify(ctx context.Context, data, sig []byte) error {
+func (es *EcdsaSignerVerifier) Verify(ctx context.Context, data, sig []byte) error {
 	var r big.Int
 	var s big.Int
 	digest := sha256.Sum256(data)
@@ -288,11 +288,11 @@ func (es *EcdsaSigner) Verify(ctx context.Context, data, sig []byte) error {
 	return errVerify
 }
 
-func (es *EcdsaSigner) KeyID() (string, error) {
+func (es *EcdsaSignerVerifier) KeyID() (string, error) {
 	return es.keyID, nil
 }
 
-func (es *EcdsaSigner) Public() crypto.PublicKey {
+func (es *EcdsaSignerVerifier) Public() crypto.PublicKey {
 	return es.key.Public()
 }
 
@@ -302,7 +302,7 @@ func TestEcdsaSign(t *testing.T) {
 	var keyID = "test key 123"
 	var payloadType = "http://example.com/HelloWorld"
 	var payload = "hello world"
-	var ecdsa = &EcdsaSigner{
+	var ecdsa = &EcdsaSignerVerifier{
 		keyID: keyID,
 		key:   newEcdsaKey(),
 	}
@@ -325,7 +325,9 @@ func TestEcdsaSign(t *testing.T) {
 	assert.Equal(t, &want, env, "Wrong envelope generated")
 
 	// Now verify
-	acceptedKeys, err := signer.Verify(context.TODO(), env)
+	verifier, err := NewEnvelopeVerifier(ecdsa)
+	assert.Nil(t, err, "unexpected error")
+	acceptedKeys, err := verifier.Verify(context.TODO(), env)
 	assert.Nil(t, err, "unexpected error")
 	assert.True(t, ecdsa.verified, "verify was not called")
 	assert.Len(t, acceptedKeys, 1, "unexpected keys")
@@ -381,14 +383,16 @@ func TestVerifyOneProvider(t *testing.T) {
 	var payloadType = "http://example.com/HelloWorld"
 	var payload = "hello world"
 
-	var ns nilsigner
+	var ns nilsignerverifier
 	signer, err := NewEnvelopeSigner(ns)
 	assert.Nil(t, err, "unexpected error")
 
 	env, err := signer.SignPayload(context.TODO(), payloadType, []byte(payload))
 	assert.Nil(t, err, "sign failed")
 
-	acceptedKeys, err := signer.Verify(context.TODO(), env)
+	verifier, err := NewEnvelopeVerifier(ns)
+	assert.Nil(t, err, "unexpected error")
+	acceptedKeys, err := verifier.Verify(context.TODO(), env)
 	assert.Nil(t, err, "unexpected error")
 	assert.Len(t, acceptedKeys, 1, "unexpected keys")
 	assert.Equal(t, acceptedKeys[0].KeyID, "nil", "unexpected keyid")
@@ -398,15 +402,17 @@ func TestVerifyMultipleProvider(t *testing.T) {
 	var payloadType = "http://example.com/HelloWorld"
 	var payload = "hello world"
 
-	var ns nilsigner
-	var null nullsigner
+	var ns nilsignerverifier
+	var null nullsignerverifier
 	signer, err := NewEnvelopeSigner(ns, null)
 	assert.Nil(t, err, "unexpected error")
 
 	env, err := signer.SignPayload(context.TODO(), payloadType, []byte(payload))
 	assert.Nil(t, err, "sign failed")
 
-	acceptedKeys, err := signer.Verify(context.TODO(), env)
+	verifier, err := NewEnvelopeVerifier(ns, null)
+	assert.Nil(t, err, "unexpected error")
+	acceptedKeys, err := verifier.Verify(context.TODO(), env)
 	assert.Nil(t, err, "unexpected error")
 	assert.Len(t, acceptedKeys, 2, "unexpected keys")
 }
@@ -415,24 +421,26 @@ func TestVerifyMultipleProviderThreshold(t *testing.T) {
 	var payloadType = "http://example.com/HelloWorld"
 	var payload = "hello world"
 
-	var ns nilsigner
-	var null nullsigner
+	var ns nilsignerverifier
+	var null nullsignerverifier
 	signer, err := NewMultiEnvelopeSigner(2, ns, null)
 	assert.Nil(t, err)
 	env, err := signer.SignPayload(context.TODO(), payloadType, []byte(payload))
 	assert.Nil(t, err, "sign failed")
 
-	acceptedKeys, err := signer.Verify(context.TODO(), env)
+	verifier, err := NewMultiEnvelopeVerifier(2, ns, null)
+	assert.Nil(t, err, "unexpected error")
+	acceptedKeys, err := verifier.Verify(context.TODO(), env)
 	assert.Nil(t, err, "unexpected error")
 	assert.Len(t, acceptedKeys, 2, "unexpected keys")
 }
 
 func TestVerifyMultipleProviderThresholdErr(t *testing.T) {
-	var ns nilsigner
-	var null nullsigner
-	_, err := NewMultiEnvelopeSigner(3, ns, null)
+	var ns nilsignerverifier
+	var null nullsignerverifier
+	_, err := NewMultiEnvelopeVerifier(3, ns, null)
 	assert.Equal(t, errThreshold, err, "wrong error")
-	_, err = NewMultiEnvelopeSigner(0, ns, null)
+	_, err = NewMultiEnvelopeVerifier(0, ns, null)
 	assert.Equal(t, errThreshold, err, "wrong error")
 }
 
@@ -440,14 +448,16 @@ func TestVerifyErr(t *testing.T) {
 	var payloadType = "http://example.com/HelloWorld"
 	var payload = "hello world"
 
-	var errv errverifier
-	signer, err := NewEnvelopeSigner(errv)
+	var errsv errsignerverifier
+	signer, err := NewEnvelopeSigner(errsv)
 	assert.Nil(t, err, "unexpected error")
 
 	env, err := signer.SignPayload(context.TODO(), payloadType, []byte(payload))
 	assert.Nil(t, err, "sign failed")
 
-	_, err = signer.Verify(context.TODO(), env)
+	verifier, err := NewEnvelopeVerifier(errsv)
+	assert.Nil(t, err, "unexpected error")
+	_, err = verifier.Verify(context.TODO(), env)
 	assert.Equal(t, errVerify, err, "wrong error")
 }
 
@@ -462,24 +472,26 @@ func TestBadVerifier(t *testing.T) {
 	env, err := signer.SignPayload(context.TODO(), payloadType, []byte(payload))
 	assert.Nil(t, err, "sign failed")
 
-	_, err = signer.Verify(context.TODO(), env)
+	verifier, err := NewEnvelopeVerifier(badv)
+	assert.Nil(t, err, "unexpected error")
+	_, err = verifier.Verify(context.TODO(), env)
 	assert.NotNil(t, err, "expected error")
 }
 
 func TestVerifyNoSig(t *testing.T) {
 	var badv badverifier
-	signer, err := NewEnvelopeSigner(badv)
+	verifier, err := NewEnvelopeVerifier(badv)
 	assert.Nil(t, err, "unexpected error")
 
 	env := &Envelope{}
 
-	_, err = signer.Verify(context.TODO(), env)
+	_, err = verifier.Verify(context.TODO(), env)
 	assert.Equal(t, ErrNoSignature, err, "wrong error")
 }
 
 func TestVerifyBadBase64(t *testing.T) {
 	var badv badverifier
-	signer, err := NewEnvelopeSigner(badv)
+	verifier, err := NewEnvelopeVerifier(badv)
 	assert.Nil(t, err, "unexpected error")
 
 	t.Run("Payload", func(t *testing.T) {
@@ -490,7 +502,7 @@ func TestVerifyBadBase64(t *testing.T) {
 			},
 		}
 
-		_, err := signer.Verify(context.TODO(), env)
+		_, err := verifier.Verify(context.TODO(), env)
 		assert.IsType(t, base64.CorruptInputError(0), err, "wrong error")
 	})
 
@@ -504,7 +516,7 @@ func TestVerifyBadBase64(t *testing.T) {
 			},
 		}
 
-		_, err := signer.Verify(context.TODO(), env)
+		_, err := verifier.Verify(context.TODO(), env)
 		assert.IsType(t, base64.CorruptInputError(0), err, "wrong error")
 	})
 }
@@ -512,9 +524,9 @@ func TestVerifyBadBase64(t *testing.T) {
 func TestVerifyNoMatch(t *testing.T) {
 	var payloadType = "http://example.com/HelloWorld"
 
-	var ns nilsigner
-	var null nullsigner
-	signer, err := NewEnvelopeSigner(ns, null)
+	var ns nilsignerverifier
+	var null nullsignerverifier
+	verifier, err := NewEnvelopeVerifier(ns, null)
 	assert.Nil(t, err, "unexpected error")
 
 	env := &Envelope{
@@ -528,7 +540,7 @@ func TestVerifyNoMatch(t *testing.T) {
 		},
 	}
 
-	_, err = signer.Verify(context.TODO(), env)
+	_, err = verifier.Verify(context.TODO(), env)
 	assert.NotNil(t, err, "expected error")
 }
 
@@ -577,7 +589,9 @@ func TestVerifyOneFail(t *testing.T) {
 	env, err := signer.SignPayload(context.TODO(), payloadType, []byte(payload))
 	assert.Nil(t, err, "sign failed")
 
-	acceptedKeys, err := signer.Verify(context.TODO(), env)
+	verifier, err := NewEnvelopeVerifier(s1, s2)
+	assert.Nil(t, err, "unexpected error")
+	acceptedKeys, err := verifier.Verify(context.TODO(), env)
 	assert.Nil(t, err, "expected error")
 	assert.True(t, s1.verifyCalled, "verify not called")
 	assert.True(t, s2.verifyCalled, "verify not called")
@@ -603,7 +617,9 @@ func TestVerifySameKeyID(t *testing.T) {
 	env, err := signer.SignPayload(context.TODO(), payloadType, []byte(payload))
 	assert.Nil(t, err, "sign failed")
 
-	acceptedKeys, err := signer.Verify(context.TODO(), env)
+	verifier, err := NewEnvelopeVerifier(s1, s2)
+	assert.Nil(t, err, "unexpected error")
+	acceptedKeys, err := verifier.Verify(context.TODO(), env)
 	assert.Nil(t, err, "expected error")
 	assert.True(t, s1.verifyCalled, "verify not called")
 	assert.True(t, s2.verifyCalled, "verify not called")
@@ -631,7 +647,9 @@ func TestVerifyEmptyKeyID(t *testing.T) {
 	env, err := signer.SignPayload(context.TODO(), payloadType, []byte(payload))
 	assert.Nil(t, err, "sign failed")
 
-	acceptedKeys, err := signer.Verify(context.TODO(), env)
+	verifier, err := NewEnvelopeVerifier(s1, s2)
+	assert.Nil(t, err, "unexpected error")
+	acceptedKeys, err := verifier.Verify(context.TODO(), env)
 	assert.Nil(t, err, "expected error")
 	// assert.True(t, s1.verifyCalled, "verify not called")
 	// assert.True(t, s2.verifyCalled, "verify not called")
@@ -645,12 +663,12 @@ func TestVerifyPublicKeyID(t *testing.T) {
 	var keyID = "SHA256:f4AuBLdH4Lj/dIuwAUXXebzoI9B/cJ4iSQ3/qByIl4M"
 	// var keyID = "test key 123"
 
-	var s1 = &EcdsaSigner{
+	var s1 = &EcdsaSignerVerifier{
 		keyID: "",
 		key:   newEcdsaKey(),
 	}
 
-	var s2 = &EcdsaSigner{
+	var s2 = &EcdsaSignerVerifier{
 		keyID: "",
 		key:   newEcdsaKey(),
 	}
@@ -662,7 +680,9 @@ func TestVerifyPublicKeyID(t *testing.T) {
 	env, err := signer.SignPayload(context.TODO(), payloadType, []byte(payload))
 	assert.Nil(t, err, "sign failed")
 
-	acceptedKeys, err := signer.Verify(context.TODO(), env)
+	verifier, err := NewEnvelopeVerifier(s1, s2)
+	assert.Nil(t, err, "unexpected error")
+	acceptedKeys, err := verifier.Verify(context.TODO(), env)
 	assert.Nil(t, err, "expected error")
 	assert.Len(t, acceptedKeys, 1, "unexpected keys")
 	assert.Equal(t, acceptedKeys[0].KeyID, keyID, "unexpected keyid")

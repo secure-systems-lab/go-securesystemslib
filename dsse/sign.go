@@ -22,40 +22,6 @@ var ErrNoSignature = errors.New("no signature found")
 var ErrNoSigners = errors.New("no signers provided")
 
 /*
-Envelope captures an envelope as described by the Secure Systems Lab
-Signing Specification. See here:
-https://github.com/secure-systems-lab/signing-spec/blob/master/envelope.md
-*/
-type Envelope struct {
-	PayloadType string      `json:"payloadType"`
-	Payload     string      `json:"payload"`
-	Signatures  []Signature `json:"signatures"`
-}
-
-/*
-DecodeB64Payload returns the serialized body, decoded
-from the envelope's payload field. A flexible
-decoder is used, first trying standard base64, then
-URL-encoded base64.
-*/
-func (e *Envelope) DecodeB64Payload() ([]byte, error) {
-	return b64Decode(e.Payload)
-}
-
-/*
-Signature represents a generic in-toto signature that contains the identifier
-of the key which was used to create the signature.
-The used signature scheme has to be agreed upon by the signer and verifer
-out of band.
-The signature is a base64 encoding of the raw bytes from the signature
-algorithm.
-*/
-type Signature struct {
-	KeyID string `json:"keyid"`
-	Sig   string `json:"sig"`
-}
-
-/*
 PAE implementes the DSSE Pre-Authentic Encoding
 https://github.com/secure-systems-lab/dsse/blob/master/protocol.md#signature-definition
 */
@@ -82,35 +48,27 @@ type Signer interface {
 	KeyID() (string, error)
 }
 
-// SignVerifer provides both the signing and verification interface.
-type SignVerifier interface {
-	Signer
-	Verifier
-}
-
 // EnvelopeSigner creates signed Envelopes.
 type EnvelopeSigner struct {
-	providers []SignVerifier
-	ev        *EnvelopeVerifier
+	providers []SignerVerifier
 }
 
 /*
-NewEnvelopeSigner creates an EnvelopeSigner that uses 1+ Signer
-algorithms to sign the data.
-Creates a verifier with threshold=1, at least one of the providers must validate signitures successfully.
+NewEnvelopeSigner creates an EnvelopeSigner that uses 1+ Signer algorithms to
+sign the data. Creates a verifier with threshold=1, at least one of the
+providers must validate signatures successfully.
 */
-func NewEnvelopeSigner(p ...SignVerifier) (*EnvelopeSigner, error) {
+func NewEnvelopeSigner(p ...SignerVerifier) (*EnvelopeSigner, error) {
 	return NewMultiEnvelopeSigner(1, p...)
 }
 
 /*
 NewMultiEnvelopeSigner creates an EnvelopeSigner that uses 1+ Signer
-algorithms to sign the data.
-Creates a verifier with threshold.
-threashold indicates the amount of providers that must validate the envelope.
+algorithms to sign the data. Creates a verifier with threshold. Threshold
+indicates the amount of providers that must validate the envelope.
 */
-func NewMultiEnvelopeSigner(threshold int, p ...SignVerifier) (*EnvelopeSigner, error) {
-	var providers []SignVerifier
+func NewMultiEnvelopeSigner(threshold int, p ...SignerVerifier) (*EnvelopeSigner, error) {
+	var providers []SignerVerifier
 
 	for _, sv := range p {
 		if sv != nil {
@@ -122,19 +80,8 @@ func NewMultiEnvelopeSigner(threshold int, p ...SignVerifier) (*EnvelopeSigner, 
 		return nil, ErrNoSigners
 	}
 
-	evps := []Verifier{}
-	for _, p := range providers {
-		evps = append(evps, p.(Verifier))
-	}
-
-	ev, err := NewMultiEnvelopeVerifier(threshold, evps...)
-	if err != nil {
-		return nil, err
-	}
-
 	return &EnvelopeSigner{
 		providers: providers,
-		ev:        ev,
 	}, nil
 }
 
@@ -169,30 +116,4 @@ func (es *EnvelopeSigner) SignPayload(ctx context.Context, payloadType string, b
 	}
 
 	return &e, nil
-}
-
-/*
-Verify decodes the payload and verifies the signature.
-Any domain specific validation such as parsing the decoded body and
-validating the payload type is left out to the caller.
-Verify returns a list of accepted keys each including a keyid, public and signiture of the accepted provider keys.
-*/
-func (es *EnvelopeSigner) Verify(ctx context.Context, e *Envelope) ([]AcceptedKey, error) {
-	return es.ev.Verify(ctx, e)
-}
-
-/*
-Both standard and url encoding are allowed:
-https://github.com/secure-systems-lab/dsse/blob/master/envelope.md
-*/
-func b64Decode(s string) ([]byte, error) {
-	b, err := base64.StdEncoding.DecodeString(s)
-	if err != nil {
-		b, err = base64.URLEncoding.DecodeString(s)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return b, nil
 }
