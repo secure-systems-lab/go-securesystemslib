@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/secure-systems-lab/go-securesystemslib/dsse"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -66,4 +67,53 @@ func TestRSAPSSSignerVerifierSignAndVerify(t *testing.T) {
 		_, err = sv.Sign(context.Background(), message)
 		assert.ErrorIs(t, err, ErrNotPrivateKey)
 	})
+}
+
+func TestRSAPSSSignerVerifierWithDSSEEnvelope(t *testing.T) {
+	key, err := LoadRSAPSSKeyFromFile(filepath.Join("test-data", "rsa-test-key"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sv, err := NewRSAPSSSignerVerifierFromSSLibKey(key)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	payloadType := "application/vnd.dsse+json"
+	payload := []byte("test message")
+
+	es, err := dsse.NewEnvelopeSigner(sv)
+	if err != nil {
+		t.Error(err)
+	}
+
+	env, err := es.SignPayload(context.Background(), payloadType, payload)
+	if err != nil {
+		t.Error(err)
+	}
+
+	assert.Equal(t, "966c5d84ba73ccded42eb473c939d77336e4def253ffaf6739f8e983ef73dad8", env.Signatures[0].KeyID)
+	envPayload, err := env.DecodeB64Payload()
+	assert.Equal(t, payload, envPayload)
+	assert.Nil(t, err)
+
+	key, err = LoadRSAPSSKeyFromFile(filepath.Join("test-data", "rsa-test-key.pub"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sv, err = NewRSAPSSSignerVerifierFromSSLibKey(key)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ev, err := dsse.NewEnvelopeVerifier(sv)
+	if err != nil {
+		t.Error(err)
+	}
+
+	acceptedKeys, err := ev.Verify(context.Background(), env)
+	assert.Nil(t, err)
+	assert.Equal(t, "966c5d84ba73ccded42eb473c939d77336e4def253ffaf6739f8e983ef73dad8", acceptedKeys[0].KeyID)
 }

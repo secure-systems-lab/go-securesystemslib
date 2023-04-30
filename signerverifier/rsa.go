@@ -65,7 +65,7 @@ func (sv *RSAPSSSignerVerifier) Sign(ctx context.Context, data []byte) ([]byte, 
 	return rsa.SignPSS(rand.Reader, sv.private, crypto.SHA256, hashedData, &rsa.PSSOptions{SaltLength: sha256.Size, Hash: crypto.SHA256})
 }
 
-func (sv RSAPSSSignerVerifier) Verify(ctx context.Context, data []byte, sig []byte) error {
+func (sv *RSAPSSSignerVerifier) Verify(ctx context.Context, data []byte, sig []byte) error {
 	hashedData := hashBeforeSigning(data, sha256.New())
 
 	if err := rsa.VerifyPSS(sv.public, crypto.SHA256, hashedData, sig, &rsa.PSSOptions{SaltLength: sha256.Size, Hash: crypto.SHA256}); err != nil {
@@ -75,11 +75,11 @@ func (sv RSAPSSSignerVerifier) Verify(ctx context.Context, data []byte, sig []by
 	return nil
 }
 
-func (sv RSAPSSSignerVerifier) KeyID() (string, error) {
+func (sv *RSAPSSSignerVerifier) KeyID() (string, error) {
 	return sv.keyID, nil
 }
 
-func (sv RSAPSSSignerVerifier) Public() crypto.PublicKey {
+func (sv *RSAPSSSignerVerifier) Public() crypto.PublicKey {
 	return sv.public
 }
 
