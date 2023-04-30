@@ -5,6 +5,7 @@ import (
 	"crypto"
 	"crypto/ed25519"
 	"encoding/hex"
+	"os"
 )
 
 const Ed25519KeyType = "ed25519"
@@ -76,4 +77,13 @@ func (sv Ed25519SignerVerifier) KeyID() (string, error) {
 // Ed25519SignerVerifier instance.
 func (sv Ed25519SignerVerifier) Public() crypto.PublicKey {
 	return sv.public
+}
+
+func LoadEd25519KeyFromFile(path string) (*SSLibKey, error) {
+	contents, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return loadKeyFromSSLibBytes(contents)
 }

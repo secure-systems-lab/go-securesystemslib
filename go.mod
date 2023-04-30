@@ -1,6 +1,6 @@
 module github.com/secure-systems-lab/go-securesystemslib
 
-go 1.17
+go 1.20
 
 require (
 	github.com/codahale/rfc6979 v0.0.0-20141003034818-6a90f24967eb
