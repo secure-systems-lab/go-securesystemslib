@@ -2,6 +2,7 @@ package dsse
 
 import (
 	"encoding/base64"
+	"fmt"
 )
 
 /*
@@ -45,7 +46,7 @@ func b64Decode(s string) ([]byte, error) {
 	if err != nil {
 		b, err = base64.URLEncoding.DecodeString(s)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("unable to base64 decode payload (is payload in the right format?)")
 		}
 	}
 
