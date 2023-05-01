@@ -9,6 +9,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"os"
+	"strings"
 )
 
 const (
@@ -96,12 +97,12 @@ func (sv *RSAPSSSignerVerifier) Public() crypto.PublicKey {
 func LoadRSAPSSKeyFromFile(path string) (*SSLibKey, error) {
 	contents, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("unable to load RSA PSS key from file: %w", err)
+		return nil, fmt.Errorf("unable to load RSA key from file: %w", err)
 	}
 
 	pemData, keyObj, err := decodeAndParsePEM(contents)
 	if err != nil {
-		return nil, fmt.Errorf("unable to load RSA PSS key from file: %w", err)
+		return nil, fmt.Errorf("unable to load RSA key from file: %w", err)
 	}
 
 	key := &SSLibKey{
@@ -115,23 +116,23 @@ func LoadRSAPSSKeyFromFile(path string) (*SSLibKey, error) {
 	case *rsa.PublicKey:
 		pubKeyBytes, err := x509.MarshalPKIXPublicKey(k)
 		if err != nil {
-			return nil, fmt.Errorf("unable to load RSA PSS key from file: %w", err)
+			return nil, fmt.Errorf("unable to load RSA key from file: %w", err)
 		}
-		key.KeyVal.Public = string(generatePEMBlock(pubKeyBytes, PublicKeyPEM))
+		key.KeyVal.Public = strings.TrimSpace(string(generatePEMBlock(pubKeyBytes, PublicKeyPEM)))
 
 	case *rsa.PrivateKey:
 		pubKeyBytes, err := x509.MarshalPKIXPublicKey(k.Public())
 		if err != nil {
-			return nil, fmt.Errorf("unable to load RSA PSS key from file: %w", err)
+			return nil, fmt.Errorf("unable to load RSA key from file: %w", err)
 		}
-		key.KeyVal.Public = string(generatePEMBlock(pubKeyBytes, PublicKeyPEM))
-		key.KeyVal.Private = string(generatePEMBlock(pemData.Bytes, RSAPrivateKeyPEM))
+		key.KeyVal.Public = strings.TrimSpace(string(generatePEMBlock(pubKeyBytes, PublicKeyPEM)))
+		key.KeyVal.Private = strings.TrimSpace(string(generatePEMBlock(pemData.Bytes, RSAPrivateKeyPEM)))
 	}
 
 	if len(key.KeyID) == 0 {
 		keyID, err := calculateKeyID(key)
 		if err != nil {
-			return nil, fmt.Errorf("unable to load RSA PSS key from file: %w", err)
+			return nil, fmt.Errorf("unable to load RSA key from file: %w", err)
 		}
 		key.KeyID = keyID
 	}

@@ -8,6 +8,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"hash"
+	"testing"
 
 	"github.com/secure-systems-lab/go-securesystemslib/cjson"
 )
@@ -137,4 +138,13 @@ func parsePEMKey(data []byte) (any, error) {
 func hashBeforeSigning(data []byte, h hash.Hash) []byte {
 	h.Write(data)
 	return h.Sum(nil)
+}
+
+func hexDecode(t *testing.T, data string) []byte {
+	t.Helper()
+	b, err := hex.DecodeString(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return b
 }
