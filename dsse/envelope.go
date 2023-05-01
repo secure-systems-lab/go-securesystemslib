@@ -38,6 +38,16 @@ type Signature struct {
 }
 
 /*
+PAE implementes the DSSE Pre-Authentic Encoding
+https://github.com/secure-systems-lab/dsse/blob/master/protocol.md#signature-definition
+*/
+func PAE(payloadType string, payload []byte) []byte {
+	return []byte(fmt.Sprintf("DSSEv1 %d %s %d %s",
+		len(payloadType), payloadType,
+		len(payload), payload))
+}
+
+/*
 Both standard and url encoding are allowed:
 https://github.com/secure-systems-lab/dsse/blob/master/envelope.md
 */
