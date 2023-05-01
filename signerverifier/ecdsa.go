@@ -7,11 +7,14 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/sha512"
+	"fmt"
 	"os"
 )
 
 const ECDSAKeyType = "ecdsa"
 
+// ECDSASignerVerifier is a dsse.SignerVerifier compliant interface to sign and
+// verify signatures using ECDSA keys.
 type ECDSASignerVerifier struct {
 	keyID     string
 	curveSize int
@@ -19,14 +22,20 @@ type ECDSASignerVerifier struct {
 	public    *ecdsa.PublicKey
 }
 
+// NewECDSASignerVerifierFromSSLibKey creates an ECDSASignerVerifier from an
+// SSLibKey.
 func NewECDSASignerVerifierFromSSLibKey(key *SSLibKey) (*ECDSASignerVerifier, error) {
+	if len(key.KeyVal.Public) == 0 {
+		return nil, ErrInvalidKey
+	}
+
 	_, publicParsedKey, err := decodeAndParsePEM([]byte(key.KeyVal.Public))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to create ECDSA signerverifier: %w", err)
 	}
 
 	sv := &ECDSASignerVerifier{
-		keyID:     key.KeyID(),
+		keyID:     key.KeyID,
 		curveSize: publicParsedKey.(*ecdsa.PublicKey).Params().BitSize,
 		public:    publicParsedKey.(*ecdsa.PublicKey),
 		private:   nil,
@@ -35,7 +44,7 @@ func NewECDSASignerVerifierFromSSLibKey(key *SSLibKey) (*ECDSASignerVerifier, er
 	if len(key.KeyVal.Private) > 0 {
 		_, privateParsedKey, err := decodeAndParsePEM([]byte(key.KeyVal.Private))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("unable to create ECDSA signerverifier: %w", err)
 		}
 
 		sv.private = privateParsedKey.(*ecdsa.PrivateKey)
@@ -44,6 +53,7 @@ func NewECDSASignerVerifierFromSSLibKey(key *SSLibKey) (*ECDSASignerVerifier, er
 	return sv, nil
 }
 
+// Sign creates a signature for `data`.
 func (sv *ECDSASignerVerifier) Sign(ctx context.Context, data []byte) ([]byte, error) {
 	if sv.private == nil {
 		return nil, ErrNotPrivateKey
@@ -54,6 +64,7 @@ func (sv *ECDSASignerVerifier) Sign(ctx context.Context, data []byte) ([]byte, e
 	return ecdsa.SignASN1(rand.Reader, sv.private, hashedData)
 }
 
+// Verify verifies the `sig` value passed in against `data`.
 func (sv *ECDSASignerVerifier) Verify(ctx context.Context, data []byte, sig []byte) error {
 	hashedData := getECDSAHashedData(data, sv.curveSize)
 
@@ -64,18 +75,24 @@ func (sv *ECDSASignerVerifier) Verify(ctx context.Context, data []byte, sig []by
 	return nil
 }
 
+// KeyID returns the identifier of the key used to create the
+// ECDSASignerVerifier instance.
 func (sv *ECDSASignerVerifier) KeyID() (string, error) {
 	return sv.keyID, nil
 }
 
+// Public returns the public portion of the key used to create the
+// ECDSASignerVerifier instance.
 func (sv *ECDSASignerVerifier) Public() crypto.PublicKey {
 	return sv.public
 }
 
+// LoadECDSAKeyFromFile returns an SSLibKey instance for an ECDSA key stored in
+// a file in the custom securesystemslib format.
 func LoadECDSAKeyFromFile(path string) (*SSLibKey, error) {
 	contents, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to load ECDSA key from file: %w", err)
 	}
 
 	return loadKeyFromSSLibBytes(contents)

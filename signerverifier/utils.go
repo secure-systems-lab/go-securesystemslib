@@ -6,9 +6,21 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"hash"
 
 	"github.com/secure-systems-lab/go-securesystemslib/cjson"
+)
+
+/*
+Credits: Parts of this file were originally authored for in-toto-golang.
+*/
+
+var (
+	// ErrNoPEMBlock gets triggered when there is no PEM block in the provided file
+	ErrNoPEMBlock = errors.New("failed to decode the data as PEM block (are you sure this is a pem file?)")
+	// ErrFailedPEMParsing gets returned when PKCS1, PKCS8 or PKIX key parsing fails
+	ErrFailedPEMParsing = errors.New("failed parsing the PEM block: unsupported PEM type")
 )
 
 // loadKeyFromSSLibBytes returns a pointer to a Key instance created from the
@@ -20,11 +32,13 @@ func loadKeyFromSSLibBytes(contents []byte) (*SSLibKey, error) {
 		return nil, err
 	}
 
-	keyID, err := calculateKeyID(key)
-	if err != nil {
-		return nil, err
+	if len(key.KeyID) == 0 {
+		keyID, err := calculateKeyID(key)
+		if err != nil {
+			return nil, err
+		}
+		key.KeyID = keyID
 	}
-	key.keyID = keyID
 
 	return key, nil
 }

@@ -11,6 +11,7 @@ var (
 	ErrSignatureVerificationFailed = errors.New("failed to verify signature")
 	ErrUnknownKeyType              = errors.New("unknown key type")
 	ErrInvalidThreshold            = errors.New("threshold is either less than 1 or greater than number of provided public keys")
+	ErrInvalidKey                  = errors.New("key object has no value")
 )
 
 const (
@@ -23,11 +24,7 @@ type SSLibKey struct {
 	KeyType             string   `json:"keytype"`
 	KeyVal              KeyVal   `json:"keyval"`
 	Scheme              string   `json:"scheme"`
-	keyID               string
-}
-
-func (k *SSLibKey) KeyID() string {
-	return k.keyID
+	KeyID               string   `json:"keyid"`
 }
 
 type KeyVal struct {

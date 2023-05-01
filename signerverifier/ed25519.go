@@ -5,11 +5,14 @@ import (
 	"crypto"
 	"crypto/ed25519"
 	"encoding/hex"
+	"fmt"
 	"os"
 )
 
 const ED25519KeyType = "ed25519"
 
+// ED25519SignerVerifier is a dsse.SignerVerifier compliant interface to sign
+// and verify signatures using ED25519 keys.
 type ED25519SignerVerifier struct {
 	keyID   string
 	private ed25519.PrivateKey
@@ -19,16 +22,20 @@ type ED25519SignerVerifier struct {
 // NewED25519SignerVerifierFromSSLibKey creates an Ed25519SignerVerifier from an
 // SSLibKey.
 func NewED25519SignerVerifierFromSSLibKey(key *SSLibKey) (*ED25519SignerVerifier, error) {
+	if len(key.KeyVal.Public) == 0 {
+		return nil, ErrInvalidKey
+	}
+
 	public, err := hex.DecodeString(key.KeyVal.Public)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to create ED25519 signerverifier: %w", err)
 	}
 
 	var private []byte
 	if len(key.KeyVal.Private) > 0 {
 		private, err = hex.DecodeString(key.KeyVal.Private)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("unable to create ED25519 signerverifier: %w", err)
 		}
 
 		// python-securesystemslib provides an interface to generate ed25519
@@ -43,7 +50,7 @@ func NewED25519SignerVerifierFromSSLibKey(key *SSLibKey) (*ED25519SignerVerifier
 	}
 
 	return &ED25519SignerVerifier{
-		keyID:   key.KeyID(),
+		keyID:   key.KeyID,
 		public:  ed25519.PublicKey(public),
 		private: ed25519.PrivateKey(private),
 	}, nil
@@ -79,10 +86,12 @@ func (sv *ED25519SignerVerifier) Public() crypto.PublicKey {
 	return sv.public
 }
 
+// LoadED25519KeyFromFile returns an SSLibKey instance for an ED25519 key stored
+// in a file in the custom securesystemslib format.
 func LoadED25519KeyFromFile(path string) (*SSLibKey, error) {
 	contents, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to load ED25519 key from file: %w", err)
 	}
 
 	return loadKeyFromSSLibBytes(contents)
