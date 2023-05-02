@@ -1,0 +1,17 @@
+{
+ "signatures": [
+  {
+   "keyid": "52e3b8e73279d6ebdd62a5016e2725ff284f569665eb92ccb145d83817a02997",
+   "sig": "4c8b7605a9195d4ddba54493bbb5257a9836c1d16056a027fd77e97b95a4f3e36f8bc3c9c9960387d68187760b3072a30c44f992c5bf8f7497c303a3b0a32403"
+  }
+ ],
+ "signed": {
+  "_type": "link",
+  "byproducts": {},
+  "command": [],
+  "environment": {},
+  "materials": {},
+  "name": "test-ed25519",
+  "products": {}
+ }
+}

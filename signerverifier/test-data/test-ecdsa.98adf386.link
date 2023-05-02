@@ -1,0 +1,17 @@
+{
+ "signatures": [
+  {
+   "keyid": "98adf38602c48c5479e9a991ee3f8cbf541ee4f985e00f7a5fc4148d9a45b704",
+   "sig": "304502201fbb03c0937504182a48c66f9218bdcb2e99a07ada273e92e5e543867f98c8d7022100dbfa7bbf74fd76d76c1d08676419cba85bbd81dfb000f3ac6a786693ddc508f5"
+  }
+ ],
+ "signed": {
+  "_type": "link",
+  "byproducts": {},
+  "command": [],
+  "environment": {},
+  "materials": {},
+  "name": "test-ecdsa",
+  "products": {}
+ }
+}
