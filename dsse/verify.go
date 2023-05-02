@@ -60,7 +60,7 @@ func (ev *EnvelopeVerifier) Verify(ctx context.Context, e *Envelope) ([]Accepted
 
 			// Verifiers that do not provide a keyid will be generated one using public.
 			if err != nil || keyID == "" {
-				keyID, err = sha256KeyID(v.Public())
+				keyID, err = SHA256KeyID(v.Public())
 				if err != nil {
 					keyID = ""
 				}
@@ -123,7 +123,7 @@ func NewMultiEnvelopeVerifier(threshold int, p ...Verifier) (*EnvelopeVerifier, 
 	return &ev, nil
 }
 
-func sha256KeyID(pub crypto.PublicKey) (string, error) {
+func SHA256KeyID(pub crypto.PublicKey) (string, error) {
 	// Generate public key fingerprint
 	sshpk, err := ssh.NewPublicKey(pub)
 	if err != nil {
