@@ -9,17 +9,8 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-/*
-Verifier verifies a complete message against a signature and key.
-If the message was hashed prior to signature generation, the verifier
-must perform the same steps.
-If KeyID returns successfully, only signature matching the key ID will be verified.
-*/
-type Verifier interface {
-	Verify(ctx context.Context, data, sig []byte) error
-	KeyID() (string, error)
-	Public() crypto.PublicKey
-}
+// ErrNoSignature indicates that an envelope did not contain any signatures.
+var ErrNoSignature = errors.New("no signature found")
 
 type EnvelopeVerifier struct {
 	providers []Verifier
@@ -69,7 +60,7 @@ func (ev *EnvelopeVerifier) Verify(ctx context.Context, e *Envelope) ([]Accepted
 
 			// Verifiers that do not provide a keyid will be generated one using public.
 			if err != nil || keyID == "" {
-				keyID, err = SHA256KeyID(v.Public())
+				keyID, err = sha256KeyID(v.Public())
 				if err != nil {
 					keyID = ""
 				}
@@ -120,7 +111,6 @@ func NewEnvelopeVerifier(v ...Verifier) (*EnvelopeVerifier, error) {
 }
 
 func NewMultiEnvelopeVerifier(threshold int, p ...Verifier) (*EnvelopeVerifier, error) {
-
 	if threshold <= 0 || threshold > len(p) {
 		return nil, errors.New("invalid threshold")
 	}
@@ -129,10 +119,11 @@ func NewMultiEnvelopeVerifier(threshold int, p ...Verifier) (*EnvelopeVerifier, 
 		providers: p,
 		threshold: threshold,
 	}
+
 	return &ev, nil
 }
 
-func SHA256KeyID(pub crypto.PublicKey) (string, error) {
+func sha256KeyID(pub crypto.PublicKey) (string, error) {
 	// Generate public key fingerprint
 	sshpk, err := ssh.NewPublicKey(pub)
 	if err != nil {

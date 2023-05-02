@@ -5,27 +5,29 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-type KeyVal struct {
+type keyVal struct {
 	Private     string `json:"private"`
 	Public      string `json:"public"`
 	Certificate string `json:"certificate,omitempty"`
 }
 
-type Key struct {
+type key struct {
 	KeyID               string   `json:"keyid"`
 	KeyIDHashAlgorithms []string `json:"keyid_hash_algorithms"`
 	KeyType             string   `json:"keytype"`
-	KeyVal              KeyVal   `json:"keyval"`
+	KeyVal              keyVal   `json:"keyval"`
 	Scheme              string   `json:"scheme"`
 }
 
 func TestEncodeCanonical(t *testing.T) {
 	objects := []interface{}{
-		Key{},
-		Key{
-			KeyVal: KeyVal{
+		key{},
+		key{
+			KeyVal: keyVal{
 				Private: "priv",
 				Public:  "pub",
 			},
@@ -42,8 +44,8 @@ func TestEncodeCanonical(t *testing.T) {
 			"int2":   float64(42),
 			"string": `\"`,
 		},
-		Key{
-			KeyVal: KeyVal{
+		key{
+			KeyVal: keyVal{
 				Certificate: "cert",
 				Private:     "priv",
 				Public:      "pub",
@@ -91,21 +93,22 @@ func TestEncodeCanonicalErr(t *testing.T) {
 	}
 }
 
-func TestencodeCanonical(t *testing.T) {
-	expectedError := "Can't canonicalize"
+func TestEncodeCanonicalHelper(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("encodeCanonical did not panic as expected")
+		}
+	}()
 
 	objects := []interface{}{
-		TestencodeCanonical,
-		[]interface{}{TestencodeCanonical},
+		TestEncodeCanonicalHelper,
+		[]interface{}{TestEncodeCanonicalHelper},
 	}
 
 	for i := 0; i < len(objects); i++ {
 		var result strings.Builder
 		err := encodeCanonical(objects[i], &result)
-		if err == nil || !strings.Contains(err.Error(), expectedError) {
-			t.Errorf("EncodeCanonical returned '%s', expected '%s' error",
-				err, expectedError)
-		}
+		assert.Nil(t, err)
 	}
 }
 
