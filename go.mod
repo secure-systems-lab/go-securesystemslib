@@ -6,6 +6,7 @@ require (
 	github.com/codahale/rfc6979 v0.0.0-20141003034818-6a90f24967eb
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/crypto v0.11.0
+	gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405
 )
 
 require (
