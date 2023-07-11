@@ -2,10 +2,9 @@ package encrypted
 
 import (
 	"encoding/json"
-	"strings"
 	"testing"
 
-	. "gopkg.in/check.v1"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -16,143 +15,136 @@ var (
 	}
 )
 
-// Hook up gocheck into the "go test" runner.
-func Test(t *testing.T) { TestingT(t) }
-
-type EncryptedSuite struct{}
-
-var _ = Suite(&EncryptedSuite{})
-
 var plaintext = []byte("reallyimportant")
 
-func (EncryptedSuite) TestRoundtrip(c *C) {
+func TestRoundtrip(t *testing.T) {
 	passphrase := []byte("supersecret")
 
 	enc, err := Encrypt(plaintext, passphrase)
-	c.Assert(err, IsNil)
+	assert.Nil(t, err)
 
 	// successful decrypt
 	dec, err := Decrypt(enc, passphrase)
-	c.Assert(err, IsNil)
-	c.Assert(dec, DeepEquals, plaintext)
+	assert.Nil(t, err)
+	assert.Equal(t, plaintext, dec)
 
 	// wrong passphrase
 	passphrase[0] = 0
 	dec, err = Decrypt(enc, passphrase)
-	c.Assert(err, NotNil)
-	c.Assert(dec, IsNil)
+	assert.NotNil(t, err)
+	assert.Nil(t, dec)
 }
 
-func (EncryptedSuite) TestTamperedRoundtrip(c *C) {
+func TestTamperedRoundtrip(t *testing.T) {
 	passphrase := []byte("supersecret")
 
 	enc, err := Encrypt(plaintext, passphrase)
-	c.Assert(err, IsNil)
+	assert.Nil(t, err)
 
 	data := &data{}
 	err = json.Unmarshal(enc, data)
-	c.Assert(err, IsNil)
+	assert.Nil(t, err)
 
 	data.Ciphertext[0] = ^data.Ciphertext[0]
 
 	enc, _ = json.Marshal(data)
 
 	dec, err := Decrypt(enc, passphrase)
-	c.Assert(err, NotNil)
-	c.Assert(dec, IsNil)
+	assert.NotNil(t, err)
+	assert.Nil(t, dec)
 }
 
-func (EncryptedSuite) TestDecrypt(c *C) {
+func TestDecrypt(t *testing.T) {
 	enc := []byte(`{"kdf":{"name":"scrypt","params":{"N":32768,"r":8,"p":1},"salt":"N9a7x5JFGbrtB2uBR81jPwp0eiLR4A7FV3mjVAQrg1g="},"cipher":{"name":"nacl/secretbox","nonce":"2h8HxMmgRfuYdpswZBQaU3xJ1nkA/5Ik"},"ciphertext":"SEW6sUh0jf2wfdjJGPNS9+bkk2uB+Cxamf32zR8XkQ=="}`)
 	passphrase := []byte("supersecret")
 
 	dec, err := Decrypt(enc, passphrase)
-	c.Assert(err, IsNil)
-	c.Assert(dec, DeepEquals, plaintext)
+	assert.Nil(t, err)
+	assert.Equal(t, plaintext, dec)
 }
 
-func (EncryptedSuite) TestMarshalUnmarshal(c *C) {
+func TestMarshalUnmarshal(t *testing.T) {
 	passphrase := []byte("supersecret")
 
 	wrapped, err := Marshal(plaintext, passphrase)
-	c.Assert(err, IsNil)
-	c.Assert(wrapped, NotNil)
+	assert.Nil(t, err)
+	assert.NotNil(t, wrapped)
 
 	var protected []byte
 	err = Unmarshal(wrapped, &protected, passphrase)
-	c.Assert(err, IsNil)
-	c.Assert(protected, DeepEquals, plaintext)
+	assert.Nil(t, err)
+	assert.Equal(t, plaintext, protected)
 }
 
-func (EncryptedSuite) TestInvalidKDFSettings(c *C) {
+func TestInvalidKDFSettings(t *testing.T) {
 	passphrase := []byte("supersecret")
 
 	wrapped, err := MarshalWithCustomKDFParameters(plaintext, passphrase, 0)
-	c.Assert(err, IsNil)
-	c.Assert(wrapped, NotNil)
+	assert.Nil(t, err)
+	assert.NotNil(t, wrapped)
 
 	var protected []byte
 	err = Unmarshal(wrapped, &protected, passphrase)
-	c.Assert(err, IsNil)
-	c.Assert(protected, DeepEquals, plaintext)
+	assert.Nil(t, err)
+	assert.Equal(t, plaintext, protected)
 }
 
-func (EncryptedSuite) TestLegacyKDFSettings(c *C) {
+func TestLegacyKDFSettings(t *testing.T) {
 	passphrase := []byte("supersecret")
 
 	wrapped, err := MarshalWithCustomKDFParameters(plaintext, passphrase, Legacy)
-	c.Assert(err, IsNil)
-	c.Assert(wrapped, NotNil)
+	assert.Nil(t, err)
+	assert.NotNil(t, wrapped)
 
 	var protected []byte
 	err = Unmarshal(wrapped, &protected, passphrase)
-	c.Assert(err, IsNil)
-	c.Assert(protected, DeepEquals, plaintext)
+	assert.Nil(t, err)
+	assert.Equal(t, plaintext, protected)
 }
 
-func (EncryptedSuite) TestStandardKDFSettings(c *C) {
+func TestStandardKDFSettings(t *testing.T) {
 	passphrase := []byte("supersecret")
 
 	wrapped, err := MarshalWithCustomKDFParameters(plaintext, passphrase, Standard)
-	c.Assert(err, IsNil)
-	c.Assert(wrapped, NotNil)
+	assert.Nil(t, err)
+	assert.NotNil(t, wrapped)
 
 	var protected []byte
 	err = Unmarshal(wrapped, &protected, passphrase)
-	c.Assert(err, IsNil)
-	c.Assert(protected, DeepEquals, plaintext)
+	assert.Nil(t, err)
+	assert.Equal(t, plaintext, protected)
 }
 
-func (EncryptedSuite) TestOWASPKDFSettings(c *C) {
+func TestOWASPKDFSettings(t *testing.T) {
 	passphrase := []byte("supersecret")
 
 	wrapped, err := MarshalWithCustomKDFParameters(plaintext, passphrase, OWASP)
-	c.Assert(err, IsNil)
-	c.Assert(wrapped, NotNil)
+	assert.Nil(t, err)
+	assert.NotNil(t, wrapped)
 
 	var protected []byte
 	err = Unmarshal(wrapped, &protected, passphrase)
-	c.Assert(err, IsNil)
-	c.Assert(protected, DeepEquals, plaintext)
+	assert.Nil(t, err)
+	assert.Equal(t, plaintext, protected)
 }
 
-func (EncryptedSuite) TestKDFSettingVectors(c *C) {
+func TestKDFSettingVectors(t *testing.T) {
 	passphrase := []byte("supersecret")
 
 	for _, v := range kdfVectors {
 		var protected []byte
 		err := Unmarshal(v, &protected, passphrase)
-		c.Assert(err, IsNil)
-		c.Assert(protected, DeepEquals, plaintext)
+		assert.Nil(t, err)
+		assert.Equal(t, plaintext, protected)
 	}
 }
 
-func (EncryptedSuite) TestUnsupportedKDFParameters(c *C) {
+func TestUnsupportedKDFParameters(t *testing.T) {
 	enc := []byte(`{"kdf":{"name":"scrypt","params":{"N":99,"r":99,"p":99},"salt":"cZFcQJdwPhPyhU1R4qkl0qVOIjZd4V/7LYYAavq166k="},"cipher":{"name":"nacl/secretbox","nonce":"7vhRS7j0hEPBWV05skAdgLj81AkGeE7U"},"ciphertext":"6WYU/YSXVbYzl/NzaeAzmjLyfFhOOjLc0d8/GFV0aBFdJvyCcXc="}`)
 	passphrase := []byte("supersecret")
 
 	dec, err := Decrypt(enc, passphrase)
-	c.Assert(err, NotNil)
-	c.Assert(dec, IsNil)
-	c.Assert(strings.Contains(err.Error(), "unsupported scrypt parameters"), Equals, true)
+	assert.NotNil(t, err)
+	assert.Nil(t, dec)
+	assert.ErrorContains(t, err, "unsupported scrypt parameters")
 }
