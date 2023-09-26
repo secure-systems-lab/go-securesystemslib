@@ -118,7 +118,7 @@ func TestVerifyMultipleProviderThreshold(t *testing.T) {
 
 	var ns nilSignerVerifier
 	var null nullSignerVerifier
-	signer, err := NewMultiEnvelopeSigner(2, ns, null)
+	signer, err := NewEnvelopeSigner(ns, null)
 	assert.Nil(t, err)
 	env, err := signer.SignPayload(context.TODO(), payloadType, []byte(payload))
 	assert.Nil(t, err, "sign failed")
