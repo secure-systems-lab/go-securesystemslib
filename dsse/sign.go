@@ -41,6 +41,17 @@ func NewEnvelopeSigner(p ...Signer) (*EnvelopeSigner, error) {
 }
 
 /*
+NewMultiEnvelopeSigner creates an EnvelopeSigner that uses 1+ Signer
+algorithms to sign the data. The threshold parameter is legacy and is ignored.
+
+Deprecated: This function simply calls NewEnvelopeSigner, and that function should
+be preferred.
+*/
+func NewMultiEnvelopeSigner(threshold int, p ...Signer) (*EnvelopeSigner, error) {
+	return NewEnvelopeSigner(p...)
+}
+
+/*
 SignPayload signs a payload and payload type according to DSSE.
 Returned is an envelope as defined here:
 https://github.com/secure-systems-lab/dsse/blob/master/envelope.md
