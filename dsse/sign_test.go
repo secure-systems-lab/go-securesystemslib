@@ -172,7 +172,7 @@ func TestNoSigners(t *testing.T) {
 	})
 
 	t.Run("empty slice", func(t *testing.T) {
-		signer, err := NewEnvelopeSigner([]SignerVerifier{}...)
+		signer, err := NewEnvelopeSigner([]Signer{}...)
 		assert.Nil(t, signer, "unexpected signer")
 		assert.NotNil(t, err, "error expected")
 		assert.Equal(t, ErrNoSigners, err, "wrong error")
