@@ -117,21 +117,15 @@ func LoadRSAPSSKeyFromBytes(contents []byte) (*SSLibKey, error) {
 		KeyVal:              KeyVal{},
 	}
 
-	switch k := keyObj.(type) {
-		case *rsa.PublicKey, *rsa.PrivateKey:
-			pubKeyBytes, err := marshalAndGeneratePEM(k)
-			if err != nil {
-				return nil, fmt.Errorf("unable to load RSA key from file: %w", err)
-			}
-			key.KeyVal.Public = strings.TrimSpace(string(pubKeyBytes))
-
-			if _, ok := k.(*rsa.PrivateKey); ok {
-				key.KeyVal.Private = strings.TrimSpace(string(generatePEMBlock(pemData.Bytes, RSAPrivateKeyPEM)))
-			}
-		default :
-			return nil, fmt.Errorf("unexpected key type: %T", k)
+	pubKeyBytes, err := marshalAndGeneratePEM(keyObj)
+	if err != nil {
+		return nil, fmt.Errorf("unable to load RSA key from file: %w", err)
 	}
-	
+	key.KeyVal.Public = strings.TrimSpace(string(pubKeyBytes))
+
+	if _, ok := keyObj.(*rsa.PrivateKey); ok {
+		key.KeyVal.Private = strings.TrimSpace(string(generatePEMBlock(pemData.Bytes, RSAPrivateKeyPEM)))
+	}
 
 	if len(key.KeyID) == 0 {
 		keyID, err := calculateKeyID(key)
@@ -153,6 +147,8 @@ func marshalAndGeneratePEM(key interface{}) ([]byte, error) {
 		pubKeyBytes, err = x509.MarshalPKIXPublicKey(k)
 	case *rsa.PrivateKey:
 		pubKeyBytes, err = x509.MarshalPKIXPublicKey(k.Public())
+	default:
+		return nil, fmt.Errorf("unexpected key type: %T", k)
 	}
 
 	if err != nil {

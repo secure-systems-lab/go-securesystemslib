@@ -1,16 +1,18 @@
 package signerverifier
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
-	"os"
+
 	"github.com/stretchr/testify/assert"
 )
+
 func TestLoadKeyFromSSLibBytes(t *testing.T) {
 	t.Run("RSA public key", func(t *testing.T) {
 		contents, err := os.ReadFile(filepath.Join("test-data", "rsa-test-key.pub"))
 		if err != nil {
-			t.Fatalf("bad test")
+			t.Fatal(err)
 		}
 		key, err := LoadKeyFromSSLibBytes(contents)
 		assert.Nil(t, err)
@@ -24,7 +26,7 @@ func TestLoadKeyFromSSLibBytes(t *testing.T) {
 	t.Run("RSA private key", func(t *testing.T) {
 		contents, err := os.ReadFile(filepath.Join("test-data", "rsa-test-key"))
 		if err != nil {
-			t.Fatalf("bad test")
+			t.Fatal(err)
 		}
 		key, err := LoadKeyFromSSLibBytes(contents)
 		assert.Nil(t, err)
