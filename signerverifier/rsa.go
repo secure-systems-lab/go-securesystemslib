@@ -99,11 +99,13 @@ func LoadRSAPSSKeyFromFile(path string) (*SSLibKey, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to load RSA key from file: %w", err)
 	}
+
 	return LoadRSAPSSKeyFromBytes(contents)
 }
 
-// LoadRSAPSSKeyFromFile returns an SSLibKey instance for an RSA key stored in a
-// byte array.
+// LoadRSAPSSKeyFromBytes is a function that takes a byte array as input, which represents an RSA key.
+// It returns an SSLibKey instance, which is a struct that holds the key data.
+
 func LoadRSAPSSKeyFromBytes(contents []byte) (*SSLibKey, error) {
 	pemData, keyObj, err := decodeAndParsePEM(contents)
 	if err != nil {
