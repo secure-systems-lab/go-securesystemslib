@@ -103,8 +103,8 @@ func LoadRSAPSSKeyFromFile(path string) (*SSLibKey, error) {
 	return LoadRSAPSSKeyFromBytes(contents)
 }
 
-// LoadRSAPSSKeyFromBytes is a function that takes a byte array as input, which represents an RSA key.
-// It returns an SSLibKey instance, which is a struct that holds the key data.
+// LoadRSAPSSKeyFromBytes is a function that takes a byte array as input. This byte array should represent a PEM encoded RSA key, as PEM encoding is required.
+// The function returns an SSLibKey instance, which is a struct that holds the key data.
 
 func LoadRSAPSSKeyFromBytes(contents []byte) (*SSLibKey, error) {
 	pemData, keyObj, err := decodeAndParsePEM(contents)
