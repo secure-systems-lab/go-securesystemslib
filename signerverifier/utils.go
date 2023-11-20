@@ -31,7 +31,7 @@ func LoadKeyFromSSLibBytes(contents []byte) (*SSLibKey, error) {
 	var key *SSLibKey
 	if err := json.Unmarshal(contents, &key); err != nil {
 		return LoadRSAPSSKeyFromBytes(contents)
-	} 
+	}
 	if len(key.KeyID) == 0 {
 		keyID, err := calculateKeyID(key)
 		if err != nil {
