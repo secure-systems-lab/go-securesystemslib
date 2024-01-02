@@ -164,8 +164,99 @@ func TestED25519SignerVerifierWithDSSEEnvelope(t *testing.T) {
 	assert.Equal(t, "52e3b8e73279d6ebdd62a5016e2725ff284f569665eb92ccb145d83817a02997", acceptedKeys[0].KeyID)
 }
 
+func TestED25519SignerVerifierWithDSSEEnvelopeAndPEMKey(t *testing.T) {
+	key, err := LoadKey(ed25519PrivateKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sv, err := NewED25519SignerVerifierFromSSLibKey(key)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	payloadType := "application/vnd.dsse+json"
+	payload := []byte("test message")
+
+	es, err := dsse.NewEnvelopeSigner(sv)
+	if err != nil {
+		t.Error(err)
+	}
+
+	env, err := es.SignPayload(context.Background(), payloadType, payload)
+	if err != nil {
+		t.Error(err)
+	}
+
+	assert.Equal(t, "52e3b8e73279d6ebdd62a5016e2725ff284f569665eb92ccb145d83817a02997", env.Signatures[0].KeyID)
+	envPayload, err := env.DecodeB64Payload()
+	assert.Equal(t, payload, envPayload)
+	assert.Nil(t, err)
+
+	key, err = LoadKey(ed25519PublicKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sv, err = NewED25519SignerVerifierFromSSLibKey(key)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ev, err := dsse.NewEnvelopeVerifier(sv)
+	if err != nil {
+		t.Error(err)
+	}
+
+	acceptedKeys, err := ev.Verify(context.Background(), env)
+	assert.Nil(t, err)
+	assert.Equal(t, "52e3b8e73279d6ebdd62a5016e2725ff284f569665eb92ccb145d83817a02997", acceptedKeys[0].KeyID)
+}
+
 func TestED25519SignerVerifierWithMetablockFile(t *testing.T) {
 	key, err := LoadED25519KeyFromFile(filepath.Join("test-data", "ed25519-test-key.pub"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sv, err := NewED25519SignerVerifierFromSSLibKey(key)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	metadataBytes, err := os.ReadFile(filepath.Join("test-data", "test-ed25519.52e3b8e7.link"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mb := struct {
+		Signatures []struct {
+			KeyID string `json:"keyid"`
+			Sig   string `json:"sig"`
+		} `json:"signatures"`
+		Signed any `json:"signed"`
+	}{}
+
+	if err := json.Unmarshal(metadataBytes, &mb); err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "4c8b7605a9195d4ddba54493bbb5257a9836c1d16056a027fd77e97b95a4f3e36f8bc3c9c9960387d68187760b3072a30c44f992c5bf8f7497c303a3b0a32403", mb.Signatures[0].Sig)
+	assert.Equal(t, sv.keyID, mb.Signatures[0].KeyID)
+
+	encodedBytes, err := cjson.EncodeCanonical(mb.Signed)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	decodedSig := hexDecode(t, mb.Signatures[0].Sig)
+
+	err = sv.Verify(context.Background(), encodedBytes, decodedSig)
+	assert.Nil(t, err)
+}
+
+func TestED25519SignerVerifierWithMetablockFileAndPEMKey(t *testing.T) {
+	key, err := LoadKey(ed25519PublicKey)
 	if err != nil {
 		t.Fatal(err)
 	}
