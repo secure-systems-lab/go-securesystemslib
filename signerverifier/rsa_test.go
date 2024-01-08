@@ -102,7 +102,7 @@ func TestRSAPSSSignerVerifierSignAndVerify(t *testing.T) {
 }
 
 func TestRSAPSSSignerVerifierWithDSSEEnvelope(t *testing.T) {
-	key, err := LoadRSAPSSKeyFromFile(filepath.Join("test-data", "rsa-test-key"))
+	key, err := LoadKey(rsaPrivateKey)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -130,7 +130,7 @@ func TestRSAPSSSignerVerifierWithDSSEEnvelope(t *testing.T) {
 	assert.Equal(t, payload, envPayload)
 	assert.Nil(t, err)
 
-	key, err = LoadRSAPSSKeyFromFile(filepath.Join("test-data", "rsa-test-key.pub"))
+	key, err = LoadKey(rsaPublicKey)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -151,7 +151,7 @@ func TestRSAPSSSignerVerifierWithDSSEEnvelope(t *testing.T) {
 }
 
 func TestRSAPSSSignerVerifierWithMetablockFile(t *testing.T) {
-	key, err := LoadRSAPSSKeyFromFile(filepath.Join("test-data", "rsa-test-key.pub"))
+	key, err := LoadKey(rsaPublicKey)
 	if err != nil {
 		t.Fatal(err)
 	}
