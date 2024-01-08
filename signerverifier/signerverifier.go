@@ -76,7 +76,7 @@ func LoadKey(keyBytes []byte) (*SSLibKey, error) {
 			KeyType:             RSAKeyType,
 			KeyVal: KeyVal{
 				Public:  strings.TrimSpace(string(generatePEMBlock(pubKeyBytes, PublicKeyPEM))),
-				Private: strings.TrimSpace(string(generatePEMBlock(pemBlock.Bytes, RSAPrivateKeyPEM))),
+				Private: strings.TrimSpace(string(generatePEMBlock(pemBlock.Bytes, pemBlock.Type))),
 			},
 			Scheme: RSAKeyScheme,
 		}
