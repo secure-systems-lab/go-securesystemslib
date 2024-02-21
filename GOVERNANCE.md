@@ -12,14 +12,14 @@ Github organization.
 The goal of the go-securesystemslib project is to be a common foundational
 library for cryptographic signing and verifying. We strongly believe a common,
 widely reviewed library, will result in a higher quality and more secure
-implementaiton. The project, while not limited to, is specificly interested in
+implementaiton. The project, while not limited to, is specifically interested in
 the signing and verification of metadata and signing envelopes. Several major
 foundation-based open source projects would like to contribute to and consume
 this library. The motiviation of this governance is to give these projects the
 confidence to invest their time towards collaboration and leverage this library
 as a critical and foundational piece of their projects. This goverance will be
 as lightweight as possible to allow the project to keep pace with rapidly
-evolving technology. It is based on an assumption of good will and good intent.
+evolving technology. It is based on an assumption of goodwill and good intent.
 
 ## Code of Conduct
 
