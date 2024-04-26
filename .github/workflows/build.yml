@@ -13,7 +13,7 @@ jobs:
       with:
         go-version: ${{ matrix.go-version }}
     - name: Checkout code
-      uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f
+      uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
     - name: Format Unix
       if: runner.os == 'Linux'
       run: test -z $(go fmt ./...)
@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@1d96c772d19495a3b5c517cd2bc0cb401ea0529f
+      uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b
     - uses: dominikh/staticcheck-action@ba605356b4b29a60e87ab9404b712f3461e566dc
       with:
         version: "2022.1"
