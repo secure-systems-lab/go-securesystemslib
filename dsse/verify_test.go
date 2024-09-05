@@ -380,3 +380,44 @@ func TestVerifyPublicKeyID(t *testing.T) {
 	assert.Len(t, acceptedKeys, 1, "unexpected keys")
 	assert.Equal(t, acceptedKeys[0].KeyID, keyID, "unexpected keyid")
 }
+
+func TestVerifyMultipleProviderAndEnvelopes(t *testing.T) {
+	const payloadType = "http://example.com/HelloWorld"
+	const payload = "hello world"
+
+	var ns nilSignerVerifier
+	var null nullSignerVerifier
+
+	signerNil, err := NewEnvelopeSigner(ns)
+	assert.Nil(t, err, "unexpected error")
+
+	signerNull, err := NewEnvelopeSigner(null)
+	assert.Nil(t, err, "unexpected error")
+
+	envNil1, err := signerNil.SignPayload(context.TODO(), payloadType, []byte(payload))
+	assert.Nil(t, err, "sign failed")
+
+	envNil2, err := signerNil.SignPayload(context.TODO(), payloadType, []byte(payload))
+	assert.Nil(t, err, "sign failed")
+
+	envNull, err := signerNull.SignPayload(context.TODO(), payloadType, []byte(payload))
+	assert.Nil(t, err, "sign failed")
+
+	verifier, err := NewEnvelopeVerifier(ns, null)
+	assert.Nil(t, err, "unexpected error")
+
+	acceptedKeysNil1, err := verifier.Verify(context.TODO(), envNil1)
+	assert.Nil(t, err, "unexpected error")
+	assert.Len(t, acceptedKeysNil1, 1, "unexpected keys")
+	assert.Equal(t, "nil", acceptedKeysNil1[0].KeyID, "unexpected keyid")
+
+	acceptedKeysNil2, err := verifier.Verify(context.TODO(), envNil2)
+	assert.Nil(t, err, "unexpected error")
+	assert.Len(t, acceptedKeysNil2, 1, "unexpected keys")
+	assert.Equal(t, "nil", acceptedKeysNil2[0].KeyID, "unexpected keyid")
+
+	acceptedKeysNull, err := verifier.Verify(context.TODO(), envNull)
+	assert.Nil(t, err, "unexpected error")
+	assert.Len(t, acceptedKeysNull, 1, "unexpected keys")
+	assert.Equal(t, "null", acceptedKeysNull[0].KeyID, "unexpected keyid")
+}
