@@ -25,6 +25,6 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938
-    - uses: dominikh/staticcheck-action@ba605356b4b29a60e87ab9404b712f3461e566dc
+    - uses: dominikh/staticcheck-action@fe1dd0c3658873b46f8c9bb3291096a617310ca6
       with:
         version: "2022.1"
