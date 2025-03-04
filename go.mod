@@ -1,11 +1,11 @@
 module github.com/secure-systems-lab/go-securesystemslib
 
-go 1.20
+go 1.23.0
 
 require (
 	github.com/codahale/rfc6979 v0.0.0-20141003034818-6a90f24967eb
 	github.com/stretchr/testify v1.10.0
-	golang.org/x/crypto v0.33.0
+	golang.org/x/crypto v0.35.0
 )
 
 require (
