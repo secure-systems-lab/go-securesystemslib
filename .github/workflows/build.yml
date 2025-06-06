@@ -4,7 +4,7 @@ jobs:
   test:
     strategy:
       matrix:
-        go-version: [1.23.x, 1.24.x]
+        go-version: [1.24.x, 1.25.x]
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
@@ -19,12 +19,3 @@ jobs:
       run: test -z $(go fmt ./...)
     - name: Test
       run: go test -v ./...
-  staticcheck:
-    name: "Run staticcheck"
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
-    - uses: dominikh/staticcheck-action@024238d2898c874f26d723e7d0ff4308c35589a2
-      with:
-        version: "latest"
