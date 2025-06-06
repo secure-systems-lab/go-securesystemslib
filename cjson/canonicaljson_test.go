@@ -135,7 +135,7 @@ func BenchmarkEncodeCanonical(b *testing.B) {
 	for _, v := range table {
 		b.Run(fmt.Sprintf("input_size_%d", len(v.input)), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				EncodeCanonical(v.input)
+				EncodeCanonical(v.input) //nolint:errcheck
 			}
 		})
 	}

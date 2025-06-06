@@ -1,0 +1,33 @@
+version: "2"
+run:
+  issues-exit-code: 1
+linters:
+  enable:
+    - asciicheck
+    - errorlint
+    - gocritic
+    - gosec
+    - importas
+    - misspell
+    - prealloc
+    - revive
+    - staticcheck
+    - tparallel
+    - unconvert
+    - unparam
+    - whitespace
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+issues:
+  uniq-by-line: false
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    generated: lax
