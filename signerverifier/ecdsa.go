@@ -32,7 +32,7 @@ func NewECDSASignerVerifierFromSSLibKey(key *SSLibKey) (*ECDSASignerVerifier, er
 		return nil, ErrInvalidKey
 	}
 
-	_, publicParsedKey, err := decodeAndParsePEM([]byte(key.KeyVal.Public))
+	_, publicParsedKey, err := DecodeAndParsePEM([]byte(key.KeyVal.Public))
 	if err != nil {
 		return nil, fmt.Errorf("unable to create ECDSA signerverifier: %w", err)
 	}
@@ -45,7 +45,7 @@ func NewECDSASignerVerifierFromSSLibKey(key *SSLibKey) (*ECDSASignerVerifier, er
 	}
 
 	if len(key.KeyVal.Private) > 0 {
-		_, privateParsedKey, err := decodeAndParsePEM([]byte(key.KeyVal.Private))
+		_, privateParsedKey, err := DecodeAndParsePEM([]byte(key.KeyVal.Private))
 		if err != nil {
 			return nil, fmt.Errorf("unable to create ECDSA signerverifier: %w", err)
 		}
