@@ -45,7 +45,7 @@ type KeyVal struct {
 // LoadKey returns an SSLibKey object when provided a PEM encoded key.
 // Currently, RSA, ED25519, and ECDSA keys are supported.
 func LoadKey(keyBytes []byte) (*SSLibKey, error) {
-	pemBlock, rawKey, err := decodeAndParsePEM(keyBytes)
+	pemBlock, rawKey, err := DecodeAndParsePEM(keyBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func LoadKey(keyBytes []byte) (*SSLibKey, error) {
 			KeyIDHashAlgorithms: KeyIDHashAlgorithms,
 			KeyType:             RSAKeyType,
 			KeyVal: KeyVal{
-				Public: strings.TrimSpace(string(generatePEMBlock(pubKeyBytes, PublicKeyPEM))),
+				Public: strings.TrimSpace(string(GeneratePEMBlock(pubKeyBytes, PublicKeyPEM))),
 			},
 			Scheme: RSAKeyScheme,
 		}
@@ -75,8 +75,8 @@ func LoadKey(keyBytes []byte) (*SSLibKey, error) {
 			KeyIDHashAlgorithms: KeyIDHashAlgorithms,
 			KeyType:             RSAKeyType,
 			KeyVal: KeyVal{
-				Public:  strings.TrimSpace(string(generatePEMBlock(pubKeyBytes, PublicKeyPEM))),
-				Private: strings.TrimSpace(string(generatePEMBlock(pemBlock.Bytes, pemBlock.Type))),
+				Public:  strings.TrimSpace(string(GeneratePEMBlock(pubKeyBytes, PublicKeyPEM))),
+				Private: strings.TrimSpace(string(GeneratePEMBlock(pemBlock.Bytes, pemBlock.Type))),
 			},
 			Scheme: RSAKeyScheme,
 		}
@@ -112,7 +112,7 @@ func LoadKey(keyBytes []byte) (*SSLibKey, error) {
 			KeyIDHashAlgorithms: KeyIDHashAlgorithms,
 			KeyType:             ECDSAKeyType,
 			KeyVal: KeyVal{
-				Public: strings.TrimSpace(string(generatePEMBlock(pubKeyBytes, PublicKeyPEM))),
+				Public: strings.TrimSpace(string(GeneratePEMBlock(pubKeyBytes, PublicKeyPEM))),
 			},
 			Scheme: ECDSAKeyScheme,
 		}
@@ -126,8 +126,8 @@ func LoadKey(keyBytes []byte) (*SSLibKey, error) {
 			KeyIDHashAlgorithms: KeyIDHashAlgorithms,
 			KeyType:             ECDSAKeyType,
 			KeyVal: KeyVal{
-				Public:  strings.TrimSpace(string(generatePEMBlock(pubKeyBytes, PublicKeyPEM))),
-				Private: strings.TrimSpace(string(generatePEMBlock(pemBlock.Bytes, PrivateKeyPEM))),
+				Public:  strings.TrimSpace(string(GeneratePEMBlock(pubKeyBytes, PublicKeyPEM))),
+				Private: strings.TrimSpace(string(GeneratePEMBlock(pemBlock.Bytes, PrivateKeyPEM))),
 			},
 			Scheme: ECDSAKeyScheme,
 		}
@@ -136,7 +136,7 @@ func LoadKey(keyBytes []byte) (*SSLibKey, error) {
 		return nil, ErrUnknownKeyType
 	}
 
-	keyID, err := calculateKeyID(key)
+	keyID, err := CalculateAsymmetricKeyID(key)
 	if err != nil {
 		return nil, err
 	}
