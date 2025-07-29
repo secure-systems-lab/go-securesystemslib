@@ -1,12 +1,22 @@
 package signerverifier
 
 import (
+	"encoding/hex"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func hexDecode(t *testing.T, data string) []byte {
+	t.Helper()
+	b, err := hex.DecodeString(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return b
+}
 
 func TestLoadKeyFromSSLibBytes(t *testing.T) {
 	t.Run("RSA public key", func(t *testing.T) {
