@@ -23,7 +23,7 @@ type mockVerifier struct {
 	returnErr error
 }
 
-func (m *mockVerifier) Verify(ctx context.Context, data, sig []byte) error {
+func (m *mockVerifier) Verify(_ context.Context, _, _ []byte) error {
 	if m.returnErr != nil {
 		return m.returnErr
 	}
@@ -71,7 +71,6 @@ func TestVerify(t *testing.T) {
 
 	// Now verify
 	assert.Error(t, err)
-
 }
 
 func TestVerifyOneProvider(t *testing.T) {
@@ -247,11 +246,11 @@ type interceptSignerVerifier struct {
 	verifyCalled bool
 }
 
-func (i *interceptSignerVerifier) Sign(ctx context.Context, data []byte) ([]byte, error) {
+func (i *interceptSignerVerifier) Sign(_ context.Context, data []byte) ([]byte, error) {
 	return data, nil
 }
 
-func (i *interceptSignerVerifier) Verify(ctx context.Context, data, sig []byte) error {
+func (i *interceptSignerVerifier) Verify(_ context.Context, _, _ []byte) error {
 	i.verifyCalled = true
 
 	if i.verifyRes {

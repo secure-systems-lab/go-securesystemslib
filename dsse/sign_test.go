@@ -41,11 +41,11 @@ func TestPAE(t *testing.T) {
 
 type nilSignerVerifier int
 
-func (n nilSignerVerifier) Sign(ctx context.Context, data []byte) ([]byte, error) {
+func (n nilSignerVerifier) Sign(_ context.Context, data []byte) ([]byte, error) {
 	return data, nil
 }
 
-func (n nilSignerVerifier) Verify(ctx context.Context, data, sig []byte) error {
+func (n nilSignerVerifier) Verify(_ context.Context, data, sig []byte) error {
 	if len(data) != len(sig) {
 		return errLength
 	}
@@ -69,11 +69,11 @@ func (n nilSignerVerifier) Public() crypto.PublicKey {
 
 type nullSignerVerifier int
 
-func (n nullSignerVerifier) Sign(ctx context.Context, data []byte) ([]byte, error) {
+func (n nullSignerVerifier) Sign(_ context.Context, data []byte) ([]byte, error) {
 	return data, nil
 }
 
-func (n nullSignerVerifier) Verify(ctx context.Context, data, sig []byte) error {
+func (n nullSignerVerifier) Verify(_ context.Context, data, sig []byte) error {
 	if len(data) != len(sig) {
 		return errLength
 	}
@@ -97,11 +97,11 @@ func (n nullSignerVerifier) Public() crypto.PublicKey {
 
 type errsigner int
 
-func (n errsigner) Sign(ctx context.Context, data []byte) ([]byte, error) {
+func (n errsigner) Sign(_ context.Context, _ []byte) ([]byte, error) {
 	return nil, fmt.Errorf("signing error")
 }
 
-func (n errsigner) Verify(ctx context.Context, data, sig []byte) error {
+func (n errsigner) Verify(_ context.Context, _, _ []byte) error {
 	return errVerify
 }
 
@@ -118,11 +118,11 @@ type errSignerVerifier int
 var errVerify = fmt.Errorf("accepted signatures do not match threshold, Found: 0, Expected 1")
 var errThreshold = fmt.Errorf("invalid threshold")
 
-func (n errSignerVerifier) Sign(ctx context.Context, data []byte) ([]byte, error) {
+func (n errSignerVerifier) Sign(_ context.Context, data []byte) ([]byte, error) {
 	return data, nil
 }
 
-func (n errSignerVerifier) Verify(ctx context.Context, data, sig []byte) error {
+func (n errSignerVerifier) Verify(_ context.Context, _, _ []byte) error {
 	return errVerify
 }
 
@@ -136,12 +136,11 @@ func (n errSignerVerifier) Public() crypto.PublicKey {
 
 type badverifier int
 
-func (n badverifier) Sign(ctx context.Context, data []byte) ([]byte, error) {
+func (n badverifier) Sign(_ context.Context, data []byte) ([]byte, error) {
 	return append(data, byte(0)), nil
 }
 
-func (n badverifier) Verify(ctx context.Context, data, sig []byte) error {
-
+func (n badverifier) Verify(_ context.Context, data, sig []byte) error {
 	if len(data) != len(sig) {
 		return errLength
 	}
@@ -186,7 +185,7 @@ func TestNilSign(t *testing.T) {
 
 	pae := PAE(payloadType, payload)
 	want := Envelope{
-		Payload:     base64.StdEncoding.EncodeToString([]byte(payload)),
+		Payload:     base64.StdEncoding.EncodeToString(payload),
 		PayloadType: payloadType,
 		Signatures: []Signature{
 			{
@@ -200,7 +199,7 @@ func TestNilSign(t *testing.T) {
 	signer, err := NewEnvelopeSigner(ns)
 	assert.Nil(t, err, "unexpected error")
 
-	got, err := signer.SignPayload(context.TODO(), payloadType, []byte(payload))
+	got, err := signer.SignPayload(context.TODO(), payloadType, payload)
 	assert.Nil(t, err, "sign failed")
 	assert.Equal(t, &want, got, "bad signature")
 }
@@ -253,7 +252,7 @@ type ecdsaSignerVerifier struct {
 	verified bool
 }
 
-func (es *ecdsaSignerVerifier) Sign(ctx context.Context, data []byte) ([]byte, error) {
+func (es *ecdsaSignerVerifier) Sign(_ context.Context, data []byte) ([]byte, error) {
 	// Data is complete message, hash it and sign the digest
 	digest := sha256.Sum256(data)
 	r, s, err := rfc6979.SignECDSA(es.key, digest[:], sha256.New)
@@ -264,12 +263,12 @@ func (es *ecdsaSignerVerifier) Sign(ctx context.Context, data []byte) ([]byte, e
 	rb := r.Bytes()
 	sb := s.Bytes()
 	es.rLen = len(rb)
-	rawSig := append(rb, sb...)
+	rawSig := append(rb, sb...) //nolint:gocritic
 
 	return rawSig, nil
 }
 
-func (es *ecdsaSignerVerifier) Verify(ctx context.Context, data, sig []byte) error {
+func (es *ecdsaSignerVerifier) Verify(_ context.Context, data, sig []byte) error {
 	var r big.Int
 	var s big.Int
 	digest := sha256.Sum256(data)
