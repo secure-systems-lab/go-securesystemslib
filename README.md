@@ -1,10 +1,23 @@
+# go-securesystemslib
+
 A library that provides cryptographic and general-purpose functions for Go
 Secure Systems Lab projects at NYU.
 
+## License
 
-# Top Dependents
+See [LICENSE](/LICENSE).
 
-This file lists the top 50 dependents sorted by GitHub stars as of Jan 8th, 2026 as is reported by [GitHub's dependents]([url](https://github.com/secure-systems-lab/go-securesystemslib/network/dependents?dependents_before=NDkwOTM4MjE3MDY)).  
+## Contributing
+
+Contributions are welcome; please open a pull request and we will review your
+changes.
+
+## Where is This Used?
+
+go-securesystemslib is used in quite a few places. Below are the top 50
+dependents sorted by GitHub stars as of Jan 8th, 2026 as is reported by
+[GitHub's
+dependents]([url](https://github.com/secure-systems-lab/go-securesystemslib/network/dependents?dependents_before=NDkwOTM4MjE3MDY)).  
 
 | Repository | Stars |
 |------------|-------|
