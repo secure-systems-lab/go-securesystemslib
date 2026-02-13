@@ -24,7 +24,7 @@ func TestNewECDSASignerVerifierFromSSLibKey(t *testing.T) {
 	}
 
 	expectedPublicString := "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEu+HEqqpXLa48lXH9rkRygsfsCKq1\nXM36oXymJ9wxpM68nCqkrZCVnZ9lkEeCwD8qWYTNxD5yfWXwJjFh+K7qLQ==\n-----END PUBLIC KEY-----"
-	_, expectedPublicKey, err := decodeAndParsePEM([]byte(expectedPublicString))
+	_, expectedPublicKey, err := DecodeAndParsePEM([]byte(expectedPublicString))
 	assert.Nil(t, err)
 
 	assert.Equal(t, "98adf38602c48c5479e9a991ee3f8cbf541ee4f985e00f7a5fc4148d9a45b704", sv.keyID)

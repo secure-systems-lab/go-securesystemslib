@@ -33,13 +33,13 @@ func NewRSAPSSSignerVerifierFromSSLibKey(key *SSLibKey) (*RSAPSSSignerVerifier, 
 		return nil, ErrInvalidKey
 	}
 
-	_, publicParsedKey, err := decodeAndParsePEM([]byte(key.KeyVal.Public))
+	_, publicParsedKey, err := DecodeAndParsePEM([]byte(key.KeyVal.Public))
 	if err != nil {
 		return nil, fmt.Errorf("unable to create RSA-PSS signerverifier: %w", err)
 	}
 
 	if len(key.KeyVal.Private) > 0 {
-		_, privateParsedKey, err := decodeAndParsePEM([]byte(key.KeyVal.Private))
+		_, privateParsedKey, err := DecodeAndParsePEM([]byte(key.KeyVal.Private))
 		if err != nil {
 			return nil, fmt.Errorf("unable to create RSA-PSS signerverifier: %w", err)
 		}
@@ -115,7 +115,7 @@ func LoadRSAPSSKeyFromFile(path string) (*SSLibKey, error) {
 // Deprecated: use LoadKey() for all key types, RSA is no longer the only key
 // that uses PEM serialization.
 func LoadRSAPSSKeyFromBytes(contents []byte) (*SSLibKey, error) {
-	pemData, keyObj, err := decodeAndParsePEM(contents)
+	pemData, keyObj, err := DecodeAndParsePEM(contents)
 	if err != nil {
 		return nil, fmt.Errorf("unable to load RSA key from file: %w", err)
 	}
@@ -134,11 +134,11 @@ func LoadRSAPSSKeyFromBytes(contents []byte) (*SSLibKey, error) {
 	key.KeyVal.Public = strings.TrimSpace(string(pubKeyBytes))
 
 	if _, ok := keyObj.(*rsa.PrivateKey); ok {
-		key.KeyVal.Private = strings.TrimSpace(string(generatePEMBlock(pemData.Bytes, RSAPrivateKeyPEM)))
+		key.KeyVal.Private = strings.TrimSpace(string(GeneratePEMBlock(pemData.Bytes, RSAPrivateKeyPEM)))
 	}
 
 	if len(key.KeyID) == 0 {
-		keyID, err := calculateKeyID(key)
+		keyID, err := CalculateAsymmetricKeyID(key)
 		if err != nil {
 			return nil, fmt.Errorf("unable to load RSA key from file: %w", err)
 		}
@@ -165,5 +165,5 @@ func marshalAndGeneratePEM(key interface{}) ([]byte, error) {
 		return nil, err
 	}
 
-	return generatePEMBlock(pubKeyBytes, PublicKeyPEM), nil
+	return GeneratePEMBlock(pubKeyBytes, PublicKeyPEM), nil
 }

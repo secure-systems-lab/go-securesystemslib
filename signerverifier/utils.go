@@ -35,7 +35,7 @@ func LoadKeyFromSSLibBytes(contents []byte) (*SSLibKey, error) {
 		return LoadRSAPSSKeyFromBytes(contents)
 	}
 	if len(key.KeyID) == 0 {
-		keyID, err := calculateKeyID(key)
+		keyID, err := CalculateAsymmetricKeyID(key)
 		if err != nil {
 			return nil, err
 		}
@@ -45,7 +45,7 @@ func LoadKeyFromSSLibBytes(contents []byte) (*SSLibKey, error) {
 	return key, nil
 }
 
-func calculateKeyID(k *SSLibKey) (string, error) {
+func CalculateAsymmetricKeyID(k *SSLibKey) (string, error) {
 	key := map[string]any{
 		"keytype":               k.KeyType,
 		"scheme":                k.Scheme,
@@ -63,12 +63,12 @@ func calculateKeyID(k *SSLibKey) (string, error) {
 }
 
 /*
-generatePEMBlock creates a PEM block from scratch via the keyBytes and the pemType.
+GeneratePEMBlock creates a PEM block from scratch via the keyBytes and the pemType.
 If successful it returns a PEM block as []byte slice. This function should always
 succeed, if keyBytes is empty the PEM block will have an empty byte block.
 Therefore only header and footer will exist.
 */
-func generatePEMBlock(keyBytes []byte, pemType string) []byte {
+func GeneratePEMBlock(keyBytes []byte, pemType string) []byte {
 	// construct PEM block
 	pemBlock := &pem.Block{
 		Type:    pemType,
@@ -79,7 +79,7 @@ func generatePEMBlock(keyBytes []byte, pemType string) []byte {
 }
 
 /*
-decodeAndParsePEM receives potential PEM bytes decodes them via pem.Decode
+DecodeAndParsePEM receives potential PEM bytes decodes them via pem.Decode
 and pushes them to parseKey. If any error occurs during this process,
 the function will return nil and an error (either ErrFailedPEMParsing
 or ErrNoPEMBlock). On success it will return the decoded pemData, the
@@ -87,7 +87,7 @@ key object interface and nil as error. We need the decoded pemData,
 because LoadKey relies on decoded pemData for operating system
 interoperability.
 */
-func decodeAndParsePEM(pemBytes []byte) (*pem.Block, any, error) {
+func DecodeAndParsePEM(pemBytes []byte) (*pem.Block, any, error) {
 	// pem.Decode returns the parsed pem block and a rest.
 	// The rest is everything, that could not be parsed as PEM block.
 	// Therefore we can drop this via using the blank identifier "_"
