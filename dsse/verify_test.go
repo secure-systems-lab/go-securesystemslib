@@ -92,6 +92,31 @@ func TestVerifyOneProvider(t *testing.T) {
 	assert.Equal(t, acceptedKeys[0].KeyID, "nil", "unexpected keyid")
 }
 
+func TestVerifyAndDecode(t *testing.T) {
+	var payloadType = "http://example.com/HelloWorld"
+	var payload = "hello world"
+
+	var ns nilSignerVerifier
+	signer, err := NewEnvelopeSigner(ns)
+	assert.Nil(t, err, "unexpected error")
+
+	env, err := signer.SignPayload(context.TODO(), payloadType, []byte(payload))
+	assert.Nil(t, err, "sign failed")
+
+	verifier, err := NewEnvelopeVerifier(ns)
+	assert.Nil(t, err, "unexpected error")
+	acceptedKeys, body, err := verifier.VerifyAndDecode(context.TODO(), env)
+	assert.Nil(t, err, "unexpected error")
+	assert.Len(t, acceptedKeys, 1, "unexpected keys")
+	assert.Equal(t, acceptedKeys[0].KeyID, "nil", "unexpected keyid")
+
+	// Returned body must match a fresh DecodeB64Payload on the same envelope.
+	want, err := env.DecodeB64Payload()
+	assert.Nil(t, err, "unexpected error")
+	assert.Equal(t, want, body, "decoded body mismatch")
+	assert.Equal(t, []byte(payload), body, "decoded body does not match original payload")
+}
+
 func TestVerifyMultipleProvider(t *testing.T) {
 	var payloadType = "http://example.com/HelloWorld"
 	var payload = "hello world"

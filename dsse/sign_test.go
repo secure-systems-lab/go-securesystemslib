@@ -1,10 +1,12 @@
 package dsse
 
 import (
+	"bytes"
 	"context"
 	"crypto"
 	"crypto/ecdsa"
 	"crypto/elliptic"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
@@ -37,6 +39,31 @@ func TestPAE(t *testing.T) {
 		got := PAE("http://example.com/HelloWorld", []byte("ಠ"))
 		assert.Equal(t, want, got, "Wrong encoding")
 	})
+	t.Run("Matches Sprintf reference", func(t *testing.T) {
+		// Ensure the bytes.Buffer implementation produces output
+		// byte-identical to the original fmt.Sprintf implementation.
+		payloadType := "application/vnd.in-toto+json"
+		payload := make([]byte, 1024)
+		_, err := rand.Read(payload)
+		assert.Nil(t, err)
+
+		want := []byte(fmt.Sprintf("DSSEv1 %d %s %d %s",
+			len(payloadType), payloadType,
+			len(payload), payload))
+		got := PAE(payloadType, payload)
+		assert.True(t, bytes.Equal(want, got), "PAE output diverges from Sprintf reference")
+	})
+}
+
+func BenchmarkPAE(b *testing.B) {
+	payloadType := "application/vnd.in-toto+json"
+	payload := make([]byte, 1<<20) // 1 MB
+	_, _ = rand.Read(payload)
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = PAE(payloadType, payload)
+	}
 }
 
 type nilSignerVerifier int
