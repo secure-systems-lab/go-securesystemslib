@@ -14,7 +14,7 @@ func TestEnvelopeVerifier_Verify_HandlesNil(t *testing.T) {
 	verifier, err := NewEnvelopeVerifier(&mockVerifier{})
 	assert.NoError(t, err)
 
-	acceptedKeys, err := verifier.Verify(context.TODO(), nil)
+	acceptedKeys, err := verifier.Verify(t.Context(), nil)
 	assert.Empty(t, acceptedKeys)
 	assert.EqualError(t, err, "cannot verify a nil envelope")
 }
@@ -57,7 +57,7 @@ func TestVerify(t *testing.T) {
 
 	ev, err := NewEnvelopeVerifier(&mockVerifier{})
 	assert.Nil(t, err, "unexpected error")
-	acceptedKeys, err := ev.Verify(context.TODO(), &e)
+	acceptedKeys, err := ev.Verify(t.Context(), &e)
 
 	// Now verify
 	assert.Nil(t, err, "unexpected error")
@@ -67,7 +67,7 @@ func TestVerify(t *testing.T) {
 	// Now try an error
 	ev, err = NewEnvelopeVerifier(&mockVerifier{returnErr: errors.New("uh oh")})
 	assert.Nil(t, err, "unexpected error")
-	_, err = ev.Verify(context.TODO(), &e)
+	_, err = ev.Verify(t.Context(), &e)
 
 	// Now verify
 	assert.Error(t, err)
@@ -81,12 +81,12 @@ func TestVerifyOneProvider(t *testing.T) {
 	signer, err := NewEnvelopeSigner(ns)
 	assert.Nil(t, err, "unexpected error")
 
-	env, err := signer.SignPayload(context.TODO(), payloadType, []byte(payload))
+	env, err := signer.SignPayload(t.Context(), payloadType, []byte(payload))
 	assert.Nil(t, err, "sign failed")
 
 	verifier, err := NewEnvelopeVerifier(ns)
 	assert.Nil(t, err, "unexpected error")
-	acceptedKeys, err := verifier.Verify(context.TODO(), env)
+	acceptedKeys, err := verifier.Verify(t.Context(), env)
 	assert.Nil(t, err, "unexpected error")
 	assert.Len(t, acceptedKeys, 1, "unexpected keys")
 	assert.Equal(t, acceptedKeys[0].KeyID, "nil", "unexpected keyid")
@@ -100,12 +100,12 @@ func TestVerifyAndDecode(t *testing.T) {
 	signer, err := NewEnvelopeSigner(ns)
 	assert.Nil(t, err, "unexpected error")
 
-	env, err := signer.SignPayload(context.TODO(), payloadType, []byte(payload))
+	env, err := signer.SignPayload(t.Context(), payloadType, []byte(payload))
 	assert.Nil(t, err, "sign failed")
 
 	verifier, err := NewEnvelopeVerifier(ns)
 	assert.Nil(t, err, "unexpected error")
-	acceptedKeys, body, err := verifier.VerifyAndDecode(context.TODO(), env)
+	acceptedKeys, body, err := verifier.VerifyAndDecode(t.Context(), env)
 	assert.Nil(t, err, "unexpected error")
 	assert.Len(t, acceptedKeys, 1, "unexpected keys")
 	assert.Equal(t, acceptedKeys[0].KeyID, "nil", "unexpected keyid")
@@ -126,12 +126,12 @@ func TestVerifyMultipleProvider(t *testing.T) {
 	signer, err := NewEnvelopeSigner(ns, null)
 	assert.Nil(t, err, "unexpected error")
 
-	env, err := signer.SignPayload(context.TODO(), payloadType, []byte(payload))
+	env, err := signer.SignPayload(t.Context(), payloadType, []byte(payload))
 	assert.Nil(t, err, "sign failed")
 
 	verifier, err := NewEnvelopeVerifier(ns, null)
 	assert.Nil(t, err, "unexpected error")
-	acceptedKeys, err := verifier.Verify(context.TODO(), env)
+	acceptedKeys, err := verifier.Verify(t.Context(), env)
 	assert.Nil(t, err, "unexpected error")
 	assert.Len(t, acceptedKeys, 2, "unexpected keys")
 }
@@ -144,12 +144,12 @@ func TestVerifyMultipleProviderThreshold(t *testing.T) {
 	var null nullSignerVerifier
 	signer, err := NewEnvelopeSigner(ns, null)
 	assert.Nil(t, err)
-	env, err := signer.SignPayload(context.TODO(), payloadType, []byte(payload))
+	env, err := signer.SignPayload(t.Context(), payloadType, []byte(payload))
 	assert.Nil(t, err, "sign failed")
 
 	verifier, err := NewMultiEnvelopeVerifier(2, ns, null)
 	assert.Nil(t, err, "unexpected error")
-	acceptedKeys, err := verifier.Verify(context.TODO(), env)
+	acceptedKeys, err := verifier.Verify(t.Context(), env)
 	assert.Nil(t, err, "unexpected error")
 	assert.Len(t, acceptedKeys, 2, "unexpected keys")
 }
@@ -171,12 +171,12 @@ func TestVerifyErr(t *testing.T) {
 	signer, err := NewEnvelopeSigner(errsv)
 	assert.Nil(t, err, "unexpected error")
 
-	env, err := signer.SignPayload(context.TODO(), payloadType, []byte(payload))
+	env, err := signer.SignPayload(t.Context(), payloadType, []byte(payload))
 	assert.Nil(t, err, "sign failed")
 
 	verifier, err := NewEnvelopeVerifier(errsv)
 	assert.Nil(t, err, "unexpected error")
-	_, err = verifier.Verify(context.TODO(), env)
+	_, err = verifier.Verify(t.Context(), env)
 	assert.Equal(t, errVerify, err, "wrong error")
 }
 
@@ -188,12 +188,12 @@ func TestBadVerifier(t *testing.T) {
 	signer, err := NewEnvelopeSigner(badv)
 	assert.Nil(t, err, "unexpected error")
 
-	env, err := signer.SignPayload(context.TODO(), payloadType, []byte(payload))
+	env, err := signer.SignPayload(t.Context(), payloadType, []byte(payload))
 	assert.Nil(t, err, "sign failed")
 
 	verifier, err := NewEnvelopeVerifier(badv)
 	assert.Nil(t, err, "unexpected error")
-	_, err = verifier.Verify(context.TODO(), env)
+	_, err = verifier.Verify(t.Context(), env)
 	assert.NotNil(t, err, "expected error")
 }
 
@@ -204,7 +204,7 @@ func TestVerifyNoSig(t *testing.T) {
 
 	env := &Envelope{}
 
-	_, err = verifier.Verify(context.TODO(), env)
+	_, err = verifier.Verify(t.Context(), env)
 	assert.Equal(t, ErrNoSignature, err, "wrong error")
 }
 
@@ -223,7 +223,7 @@ func TestVerifyBadBase64(t *testing.T) {
 			},
 		}
 
-		_, err := verifier.Verify(context.TODO(), env)
+		_, err := verifier.Verify(t.Context(), env)
 		assert.IsType(t, expectedErr, err, "wrong error")
 	})
 
@@ -237,7 +237,7 @@ func TestVerifyBadBase64(t *testing.T) {
 			},
 		}
 
-		_, err := verifier.Verify(context.TODO(), env)
+		_, err := verifier.Verify(t.Context(), env)
 		assert.IsType(t, expectedErr, err, "wrong error")
 	})
 }
@@ -261,7 +261,7 @@ func TestVerifyNoMatch(t *testing.T) {
 		},
 	}
 
-	_, err = verifier.Verify(context.TODO(), env)
+	_, err = verifier.Verify(t.Context(), env)
 	assert.NotNil(t, err, "expected error")
 }
 
@@ -307,12 +307,12 @@ func TestVerifyOneFail(t *testing.T) {
 	signer, err := NewEnvelopeSigner(s1, s2)
 	assert.Nil(t, err, "unexpected error")
 
-	env, err := signer.SignPayload(context.TODO(), payloadType, []byte(payload))
+	env, err := signer.SignPayload(t.Context(), payloadType, []byte(payload))
 	assert.Nil(t, err, "sign failed")
 
 	verifier, err := NewEnvelopeVerifier(s1, s2)
 	assert.Nil(t, err, "unexpected error")
-	acceptedKeys, err := verifier.Verify(context.TODO(), env)
+	acceptedKeys, err := verifier.Verify(t.Context(), env)
 	assert.Nil(t, err, "expected error")
 	assert.True(t, s1.verifyCalled, "verify not called")
 	assert.True(t, s2.verifyCalled, "verify not called")
@@ -335,12 +335,12 @@ func TestVerifySameKeyID(t *testing.T) {
 	signer, err := NewEnvelopeSigner(s1, s2)
 	assert.Nil(t, err, "unexpected error")
 
-	env, err := signer.SignPayload(context.TODO(), payloadType, []byte(payload))
+	env, err := signer.SignPayload(t.Context(), payloadType, []byte(payload))
 	assert.Nil(t, err, "sign failed")
 
 	verifier, err := NewEnvelopeVerifier(s1, s2)
 	assert.Nil(t, err, "unexpected error")
-	acceptedKeys, err := verifier.Verify(context.TODO(), env)
+	acceptedKeys, err := verifier.Verify(t.Context(), env)
 	assert.Nil(t, err, "expected error")
 	assert.True(t, s1.verifyCalled, "verify not called")
 	assert.True(t, s2.verifyCalled, "verify not called")
@@ -365,12 +365,12 @@ func TestVerifyEmptyKeyID(t *testing.T) {
 	signer, err := NewEnvelopeSigner(s1, s2)
 	assert.Nil(t, err, "unexpected error")
 
-	env, err := signer.SignPayload(context.TODO(), payloadType, []byte(payload))
+	env, err := signer.SignPayload(t.Context(), payloadType, []byte(payload))
 	assert.Nil(t, err, "sign failed")
 
 	verifier, err := NewEnvelopeVerifier(s1, s2)
 	assert.Nil(t, err, "unexpected error")
-	acceptedKeys, err := verifier.Verify(context.TODO(), env)
+	acceptedKeys, err := verifier.Verify(t.Context(), env)
 	assert.Nil(t, err, "expected error")
 	assert.Len(t, acceptedKeys, 1, "unexpected keys")
 	assert.Equal(t, acceptedKeys[0].KeyID, "", "unexpected keyid")
@@ -394,12 +394,12 @@ func TestVerifyPublicKeyID(t *testing.T) {
 	signer, err := NewEnvelopeSigner(s1, s2)
 	assert.Nil(t, err, "unexpected error")
 
-	env, err := signer.SignPayload(context.TODO(), payloadType, []byte(payload))
+	env, err := signer.SignPayload(t.Context(), payloadType, []byte(payload))
 	assert.Nil(t, err, "sign failed")
 
 	verifier, err := NewEnvelopeVerifier(s1, s2)
 	assert.Nil(t, err, "unexpected error")
-	acceptedKeys, err := verifier.Verify(context.TODO(), env)
+	acceptedKeys, err := verifier.Verify(t.Context(), env)
 	assert.Nil(t, err, "expected error")
 	assert.Len(t, acceptedKeys, 1, "unexpected keys")
 	assert.Equal(t, acceptedKeys[0].KeyID, keyID, "unexpected keyid")
@@ -418,29 +418,29 @@ func TestVerifyMultipleProviderAndEnvelopes(t *testing.T) {
 	signerNull, err := NewEnvelopeSigner(null)
 	assert.Nil(t, err, "unexpected error")
 
-	envNil1, err := signerNil.SignPayload(context.TODO(), payloadType, []byte(payload))
+	envNil1, err := signerNil.SignPayload(t.Context(), payloadType, []byte(payload))
 	assert.Nil(t, err, "sign failed")
 
-	envNil2, err := signerNil.SignPayload(context.TODO(), payloadType, []byte(payload))
+	envNil2, err := signerNil.SignPayload(t.Context(), payloadType, []byte(payload))
 	assert.Nil(t, err, "sign failed")
 
-	envNull, err := signerNull.SignPayload(context.TODO(), payloadType, []byte(payload))
+	envNull, err := signerNull.SignPayload(t.Context(), payloadType, []byte(payload))
 	assert.Nil(t, err, "sign failed")
 
 	verifier, err := NewEnvelopeVerifier(ns, null)
 	assert.Nil(t, err, "unexpected error")
 
-	acceptedKeysNil1, err := verifier.Verify(context.TODO(), envNil1)
+	acceptedKeysNil1, err := verifier.Verify(t.Context(), envNil1)
 	assert.Nil(t, err, "unexpected error")
 	assert.Len(t, acceptedKeysNil1, 1, "unexpected keys")
 	assert.Equal(t, "nil", acceptedKeysNil1[0].KeyID, "unexpected keyid")
 
-	acceptedKeysNil2, err := verifier.Verify(context.TODO(), envNil2)
+	acceptedKeysNil2, err := verifier.Verify(t.Context(), envNil2)
 	assert.Nil(t, err, "unexpected error")
 	assert.Len(t, acceptedKeysNil2, 1, "unexpected keys")
 	assert.Equal(t, "nil", acceptedKeysNil2[0].KeyID, "unexpected keyid")
 
-	acceptedKeysNull, err := verifier.Verify(context.TODO(), envNull)
+	acceptedKeysNull, err := verifier.Verify(t.Context(), envNull)
 	assert.Nil(t, err, "unexpected error")
 	assert.Len(t, acceptedKeysNull, 1, "unexpected keys")
 	assert.Equal(t, "null", acceptedKeysNull[0].KeyID, "unexpected keyid")

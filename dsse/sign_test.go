@@ -226,7 +226,7 @@ func TestNilSign(t *testing.T) {
 	signer, err := NewEnvelopeSigner(ns)
 	assert.Nil(t, err, "unexpected error")
 
-	got, err := signer.SignPayload(context.TODO(), payloadType, payload)
+	got, err := signer.SignPayload(t.Context(), payloadType, payload)
 	assert.Nil(t, err, "sign failed")
 	assert.Equal(t, &want, got, "bad signature")
 }
@@ -236,7 +236,7 @@ func TestSignError(t *testing.T) {
 	signer, err := NewEnvelopeSigner(es)
 	assert.Nil(t, err, "unexpected error")
 
-	got, err := signer.SignPayload(context.TODO(), "t", []byte("d"))
+	got, err := signer.SignPayload(t.Context(), "t", []byte("d"))
 	assert.Nil(t, got, "expected nil")
 	assert.NotNil(t, err, "error expected")
 	assert.Equal(t, "signing error", err.Error(), "wrong error")
@@ -346,14 +346,14 @@ func TestEcdsaSign(t *testing.T) {
 	signer, err := NewEnvelopeSigner(ecdsa)
 	assert.Nil(t, err, "unexpected error")
 
-	env, err := signer.SignPayload(context.TODO(), payloadType, []byte(payload))
+	env, err := signer.SignPayload(t.Context(), payloadType, []byte(payload))
 	assert.Nil(t, err, "unexpected error")
 	assert.Equal(t, &want, env, "Wrong envelope generated")
 
 	// Now verify
 	verifier, err := NewEnvelopeVerifier(ecdsa)
 	assert.Nil(t, err, "unexpected error")
-	acceptedKeys, err := verifier.Verify(context.TODO(), env)
+	acceptedKeys, err := verifier.Verify(t.Context(), env)
 	assert.Nil(t, err, "unexpected error")
 	assert.True(t, ecdsa.verified, "verify was not called")
 	assert.Len(t, acceptedKeys, 1, "unexpected keys")
