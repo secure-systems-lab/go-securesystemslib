@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/codahale/rfc6979 v0.0.0-20141003034818-6a90f24967eb
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/crypto v0.54.0
+	golang.org/x/crypto v0.55.0
 )
 
 require (
