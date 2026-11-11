@@ -9,7 +9,7 @@ import (
 
 /*
 Envelope captures an envelope as described by the DSSE specification. See here:
-https://github.com/secure-systems-lab/dsse/blob/master/envelope.md
+https://github.com/dsse-lf/dsse/blob/master/envelope.md
 */
 type Envelope struct {
 	PayloadType string      `json:"payloadType"`
@@ -41,7 +41,7 @@ type Signature struct {
 
 /*
 PAE implements the DSSE Pre-Authentic Encoding
-https://github.com/secure-systems-lab/dsse/blob/master/protocol.md#signature-definition
+https://github.com/dsse-lf/dsse/blob/master/protocol.md#signature-definition
 */
 func PAE(payloadType string, payload []byte) []byte {
 	// Pre-size to avoid reallocation. Previously fmt.Sprintf copied payload
