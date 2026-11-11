@@ -1,6 +1,6 @@
 /*
 Package dsse implements the Dead Simple Signing Envelope (DSSE)
-https://github.com/secure-systems-lab/dsse
+https://github.com/dsse-lf/dsse
 */
 package dsse
 
@@ -54,7 +54,7 @@ func NewMultiEnvelopeSigner(_ int, p ...Signer) (*EnvelopeSigner, error) {
 /*
 SignPayload signs a payload and payload type according to DSSE.
 Returned is an envelope as defined here:
-https://github.com/secure-systems-lab/dsse/blob/master/envelope.md
+https://github.com/dsse-lf/dsse/blob/master/envelope.md
 One signature will be added for each Signer in the EnvelopeSigner.
 */
 func (es *EnvelopeSigner) SignPayload(ctx context.Context, payloadType string, body []byte) (*Envelope, error) {
