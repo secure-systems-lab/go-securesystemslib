@@ -39,7 +39,7 @@ func (m *mockVerifier) Public() crypto.PublicKey {
 }
 
 // Test against the example in the protocol specification:
-// https://github.com/secure-systems-lab/dsse/blob/master/protocol.md
+// https://github.com/dsse-lf/dsse/blob/master/protocol.md
 func TestVerify(t *testing.T) {
 	var keyID = "test key 123"
 	var payloadType = "http://example.com/HelloWorld"
